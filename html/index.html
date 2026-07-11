@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Demon HUD - Radial Menu</title>
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+  <main class="scene">
+    <!-- ══ MENU SEM ASA (estado inicial) ══ -->
+    <section class="radial-menu radial-menu--noasa" id="menuNoAsa" aria-label="Menu inicial">
+      <div class="radial-core radial-core--clickable" id="coreNoAsa">
+        <img class="core-wing" src="assets/img/demon/pegarambos.png" alt="Pegar Ambos">
+        <p class="core-title core-title--visible" data-i18n="pegar_ambos">PEGAR AMBOS</p>
+      </div>
+
+      <!-- Botão esquerda: PEGAR CAUDA -->
+      <button class="radial-item" type="button" id="btnNoAsaCauda" style="--angle: 270deg; --index: 1;">
+        <img class="icon-image" src="assets/img/demon/pegarcauda2.png" alt="Pegar Cauda">
+        <span class="label" data-i18n="pegar_cauda">PEGAR CAUDA</span>
+      </button>
+
+      <!-- Botão direita: PEGAR ASA -->
+      <button class="radial-item" type="button" id="btnNoAsaAsa" style="--angle: 90deg; --index: 2;">
+        <img class="icon-image" src="assets/img/demon/pegarasa.png" alt="Pegar Asa">
+        <span class="label" data-i18n="pegar_asa">PEGAR ASA</span>
+      </button>
+    </section>
+
+    <!-- ══ PAINEL INPUT ID DA ASA ══ -->
+    <section class="wing-id-panel" id="wingIdPanel" hidden>
+      <h2 class="wing-id-title" data-i18n="escolha_asa">ESCOLHA SUA ASA</h2>
+      <p class="wing-id-desc" data-i18n="desc_asa">Digite o número da asa que deseja equipar</p>
+      <input type="number" class="wing-id-input" id="wingIdInput" data-i18n-placeholder="placeholder_asa" placeholder="ID da asa" min="1" autocomplete="off">
+      <div class="wing-id-actions">
+        <button class="wing-id-btn wing-id-cancel" id="wingIdCancel" type="button" data-i18n="cancelar">Cancelar</button>
+        <button class="wing-id-btn wing-id-confirm" id="wingIdConfirm" type="button" data-i18n="confirmar">Confirmar</button>
+      </div>
+    </section>
+
+    <!-- ══ PAINEL INPUT ID DA CAUDA ══ -->
+    <section class="wing-id-panel" id="tailIdPanel" hidden>
+      <h2 class="wing-id-title" data-i18n="escolha_cauda">ESCOLHA SUA CAUDA</h2>
+      <p class="wing-id-desc" data-i18n="desc_cauda">Digite o número da cauda que deseja equipar</p>
+      <input type="number" class="wing-id-input" id="tailIdInput" data-i18n-placeholder="placeholder_cauda" placeholder="ID da cauda" min="1" autocomplete="off">
+      <div class="wing-id-actions">
+        <button class="wing-id-btn wing-id-cancel" id="tailIdCancel" type="button" data-i18n="cancelar">Cancelar</button>
+        <button class="wing-id-btn wing-id-confirm" id="tailIdConfirm" type="button" data-i18n="confirmar">Confirmar</button>
+      </div>
+    </section>
+
+    <!-- ══ MENU COM ASA (completo) ══ -->
+    <section class="radial-menu" id="menuComAsa" aria-label="Menu radial demon" hidden>
+      <div class="radial-core" id="coreComAsa">
+        <img class="core-wing" src="assets/img/demon/central3.png" alt="Demon Menu">
+        <p class="core-title" data-i18n="demon_menu">DEMON MENU</p>
+      </div>
+
+      <button class="radial-item" type="button" data-action="asafechar" style="--angle: 0deg; --index: 1;">
+        <span class="badge">01</span>
+        <img class="icon-image" src="assets/img/demon/asafechada.png" alt="Asa Fechar">
+        <span class="label" data-i18n="asa_fechar">ASA FECHAR</span>
+      </button>
+
+      <button class="radial-item is-active" type="button" data-action="asaabrir" style="--angle: 45deg; --index: 2;">
+        <span class="badge">02</span>
+        <img class="icon-image" src="assets/img/demon/asaabrir.png" alt="Asa Abrir">
+        <span class="label" data-i18n="asa_abrir">ASA ABRIR</span>
+      </button>
+
+      <button class="radial-item" type="button" data-action="toggleasa" id="btn3Toggle" style="--angle: 90deg; --index: 3;">
+        <span class="badge">03</span>
+        <img class="icon-image" src="assets/img/demon/pegarasa.png" alt="Toggle Asa">
+        <span class="label" id="btn3Label" data-i18n="toggle_asa">PEGAR ASA</span>
+      </button>
+
+      <button class="radial-item" type="button" data-action="caudareta" style="--angle: 135deg; --index: 4;">
+        <span class="badge">04</span>
+        <img class="icon-image" src="assets/img/demon/pegarcauda.png" alt="Cauda Reta">
+        <span class="label" data-i18n="cauda_a">CAUDA A</span>
+      </button>
+
+      <button class="radial-item" type="button" data-action="caudaenrolar" style="--angle: 180deg; --index: 5;">
+        <span class="badge">05</span>
+        <img class="icon-image" src="assets/img/demon/caudaenrolada.png" alt="Cauda Enrolar">
+        <span class="label" data-i18n="cauda_f">CAUDA F</span>
+      </button>
+
+      <button class="radial-item" type="button" data-action="caudabater" style="--angle: 225deg; --index: 6;">
+        <span class="badge">06</span>
+        <img class="icon-image" src="assets/img/demon/caudabatendo.png" alt="Cauda Bater">
+        <span class="label" data-i18n="cauda_b">CAUDA B</span>
+      </button>
+
+      <button class="radial-item" type="button" data-action="togglecauda" id="btn7Toggle" style="--angle: 270deg; --index: 7;">
+        <span class="badge">07</span>
+        <img class="icon-image" src="assets/img/demon/pegarcauda2.png" alt="Toggle Cauda">
+        <span class="label" id="btn7Label" data-i18n="toggle_cauda">PEGAR CAUDA</span>
+      </button>
+
+      <button class="radial-item" type="button" data-action="asabater" style="--angle: 315deg; --index: 8;">
+        <span class="badge">08</span>
+        <img class="icon-image" src="assets/img/demon/pegarasa.png" alt="Asa Bater">
+        <span class="label" data-i18n="asa_bater">ASA BATER</span>
+      </button>
+    </section>
+
+    <button class="edit-toggle" id="editToggle" type="button" aria-expanded="false" hidden data-i18n="modo_edit">Modo Edit</button>
+
+    <section class="edit-panel" id="editPanel" aria-label="Painel de edicao da HUD" hidden>
+      <h2>Editor da HUD</h2>
+
+      <details class="edit-category" open>
+        <summary>Categoria Geral</summary>
+
+        <label>
+          Escala geral
+          <input type="range" id="ctrlScale" min="0.6" max="1.8" step="0.01" value="1">
+        </label>
+
+        <label>
+          Posicao X
+          <input type="range" id="ctrlOffsetX" min="-600" max="600" step="1" value="0">
+        </label>
+
+        <label>
+          Posicao Y
+          <input type="range" id="ctrlOffsetY" min="-400" max="400" step="1" value="0">
+        </label>
+
+        <label>
+          Distancia radial
+          <input type="range" id="ctrlRadius" min="120" max="320" step="1" value="188">
+        </label>
+
+        <label>
+          Rotacao do menu (graus)
+          <input type="range" id="ctrlRotationOffset" min="-180" max="180" step="1" value="0">
+          <span id="rotationValue" style="font-size:0.85em;color:#fab8ff;margin-top:2px;display:block;">0°</span>
+        </label>
+
+        <label>
+          Tamanho botoes
+          <input type="range" id="ctrlItemSize" min="84" max="180" step="1" value="118">
+        </label>
+
+        <div class="edit-actions single">
+          <button id="resetPosition" type="button">Resetar so X/Y</button>
+        </div>
+      </details>
+
+      <details class="edit-category" open>
+        <summary>Categoria Icone</summary>
+
+        <label>
+          Tamanho icones botoes
+          <input type="range" id="ctrlIconSize" min="40" max="130" step="1" value="64">
+        </label>
+
+        <label>
+          Icones botoes (esquerda/direita)
+          <input type="range" id="ctrlIconOffsetX" min="-80" max="80" step="1" value="0">
+        </label>
+
+        <label>
+          Icones botoes (subir/descer)
+          <input type="range" id="ctrlIconOffsetY" min="-80" max="80" step="1" value="0">
+        </label>
+
+        <label>
+          <input type="checkbox" id="ctrlClipItemIcons">
+          Recortar icones na mascara do botao
+        </label>
+
+        <label>
+          Tamanho icone central
+          <input type="range" id="ctrlCoreIconSize" min="54" max="150" step="1" value="90">
+        </label>
+
+        <label>
+          Icone central (subir/descer)
+          <input type="range" id="ctrlCoreIconOffsetY" min="-80" max="80" step="1" value="0">
+        </label>
+
+        <label>
+          Icone central (caminho)
+          <input type="text" id="ctrlCoreIconPath" value="assets/img/asamenu.png">
+        </label>
+      </details>
+
+      <details class="edit-category" open>
+        <summary>Categoria Nome</summary>
+
+        <label>
+          Tamanho texto botoes
+          <input type="range" id="ctrlLabelSize" min="0.36" max="1.1" step="0.01" value="0.46">
+        </label>
+
+        <label>
+          Texto botoes (subir/descer)
+          <input type="range" id="ctrlItemLabelOffsetY" min="-60" max="60" step="1" value="0">
+        </label>
+
+        <label>
+          <input type="checkbox" id="ctrlShowItemLabels" checked>
+          Mostrar nomes dos botoes
+        </label>
+
+        <label>
+          <input type="checkbox" id="ctrlShowBadges" checked>
+          Mostrar numeros 01 02 03
+        </label>
+
+        <label>
+          Tamanho texto central
+          <input type="range" id="ctrlCoreLabelSize" min="0.5" max="1.2" step="0.01" value="0.72">
+        </label>
+
+        <label>
+          Texto central (subir/descer)
+          <input type="range" id="ctrlCoreLabelOffset" min="-120" max="80" step="1" value="-16">
+        </label>
+
+        <label>
+          <input type="checkbox" id="ctrlShowCoreLabel" checked>
+          Mostrar texto DEMON MENU
+        </label>
+      </details>
+
+      <details class="edit-category" open>
+        <summary>Categoria Cor</summary>
+
+        <label>
+          Cor anel radial
+          <input type="color" id="ctrlColorRing" value="#dfe7ff">
+        </label>
+
+        <label>
+          Cor borda botoes
+          <input type="color" id="ctrlColorItemBorder" value="#a4bdff">
+        </label>
+
+        <label>
+          Cor destaque ativo
+          <input type="color" id="ctrlColorActiveBorder" value="#f0faff">
+        </label>
+
+        <label>
+          Cor texto geral
+          <input type="color" id="ctrlColorText" value="#e7edf7">
+        </label>
+      </details>
+
+      <div class="edit-actions">
+        <button id="resetLayout" type="button">Resetar</button>
+        <button id="copyLayout" type="button">Copiar JSON</button>
+      </div>
+      <small>Atalho: E abre/fecha editor. Valores ficam salvos no navegador.</small>
+    </section>
+  </main>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
