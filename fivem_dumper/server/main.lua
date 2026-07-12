@@ -252,10 +252,15 @@ local function normalize_event(name, resource)
 end
 
 -----------------------------------------------------------------------
--- Pump auxiliar com logging
+-- Pump auxiliar: roda threads do ENV e cede o tick ao servidor.
+-- CRÍTICO: Wait(0) real (do FiveM) entre cada rodada de coroutines
+-- evita que o CreateThread do dumper trave o loop principal do servidor.
 -----------------------------------------------------------------------
-local function pump(env, ticks, label)
-    ENV.run_threads(env, ticks)
+local function pump(env, ticks)
+    for _ = 1, (ticks or 1) do
+        ENV.run_threads(env, 1)
+        Wait(0)  -- cede o tick ao servidor FiveM entre cada rodada
+    end
 end
 
 -----------------------------------------------------------------------
@@ -267,6 +272,7 @@ local function analyse_resource(resource_name, verbose)
     local t_start = GetGameTimer()
 
     print(string.format("^5[Dumper]^7 Iniciando análise de ^3%s^7...", resource_name))
+    Wait(0)  -- cede tick antes de qualquer io.open
 
     -- ── 1. Resolve caminho do resource ────────────────────────────
     local resource_path = GetResourcePath(resource_name)
@@ -276,8 +282,11 @@ local function analyse_resource(resource_name, verbose)
     -- Normaliza separadores
     resource_path = resource_path:gsub("\\", "/"):gsub("/+", "/"):gsub("/$", "")
     print(string.format("^5[Dumper]^7 Caminho: ^6%s^7", resource_path))
+    Wait(0)
 
     -- ── 2. Parseia o manifest ──────────────────────────────────────
+    print("^5[Dumper]^7 Lendo manifest...")
+    Wait(0)
     local manifest, merr = parse_manifest(resource_path)
     if not manifest then
         return nil, "Manifest: "..tostring(merr)
@@ -288,6 +297,7 @@ local function analyse_resource(resource_name, verbose)
     end
     print(string.format("^5[Dumper]^7 Manifest: %d shared, %d server, %d client",
         #manifest.shared, #manifest.server, #manifest.client))
+    Wait(0)
 
     if count_files() == 0 then
         return nil, "Nenhum arquivo Lua encontrado no manifest de: "..resource_name
@@ -295,6 +305,7 @@ local function analyse_resource(resource_name, verbose)
 
     -- ── 3. Fase SERVER ─────────────────────────────────────────────
     print("^5[Dumper]^7 Fase SERVER...")
+    Wait(0)
     local log_sv = make_log("SV/"..resource_name, verbose)
     local sv_env = ENV.new(resource_name, log_sv)
 
@@ -302,6 +313,7 @@ local function analyse_resource(resource_name, verbose)
     for _, rel in ipairs(manifest.shared) do
         local path = resource_path.."/"..rel
         log_sv("LOAD", rel)
+        Wait(0)
         local ok, err = ENV.load_file(path, sv_env, rel)
         if not ok then log_sv("LOAD.ERROR", rel.." — "..tostring(err)) end
     end
@@ -311,6 +323,7 @@ local function analyse_resource(resource_name, verbose)
     for _, rel in ipairs(manifest.server) do
         local path = resource_path.."/"..rel
         log_sv("LOAD", rel)
+        Wait(0)
         local ok, err = ENV.load_file(path, sv_env, rel)
         if not ok then log_sv("LOAD.ERROR", rel.." — "..tostring(err)) end
     end
@@ -359,6 +372,7 @@ local function analyse_resource(resource_name, verbose)
 
     -- ── 4. Fase CLIENT ─────────────────────────────────────────────
     print("^5[Dumper]^7 Fase CLIENT...")
+    Wait(0)
     local log_cl = make_log("CL/"..resource_name, verbose)
     local cl_env = ENV.new(resource_name, log_cl)
     -- Marca como client-side
@@ -368,6 +382,7 @@ local function analyse_resource(resource_name, verbose)
     for _, rel in ipairs(manifest.shared) do
         local path = resource_path.."/"..rel
         log_cl("LOAD", rel)
+        Wait(0)
         local ok, err = ENV.load_file(path, cl_env, rel)
         if not ok then log_cl("LOAD.ERROR", rel.." — "..tostring(err)) end
     end
@@ -377,6 +392,7 @@ local function analyse_resource(resource_name, verbose)
     for _, rel in ipairs(manifest.client) do
         local path = resource_path.."/"..rel
         log_cl("LOAD", rel)
+        Wait(0)
         local ok, err = ENV.load_file(path, cl_env, rel)
         if not ok then log_cl("LOAD.ERROR", rel.." — "..tostring(err)) end
     end

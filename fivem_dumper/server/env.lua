@@ -897,6 +897,14 @@ end
 -----------------------------------------------------------------------
 -- Carrega um arquivo .lua (texto ou bytecode Luraph) no env
 -- Retorna true ou false, errmsg
+--
+-- EXECUÇÃO EM COROUTINE — obrigatório porque:
+--   • Na thread principal coroutine.running()==nil → Wait() é no-op
+--   • Script com "while cond do Wait(0) end" no top-level vira loop infinito
+-- A coroutine permite que Wait() faça yield real, e o contador de yields
+-- mata loops que nunca terminam.
+-- NOTA: debug.sethook em coroutines não funciona no LuaJIT do FiveM.
+-- O mecanismo de proteção é via Wait() yield count APENAS.
 -----------------------------------------------------------------------
 function ENV.load_file(path, env, label)
     label = label or path
@@ -908,55 +916,42 @@ function ENV.load_file(path, env, label)
     -- Remove BOM UTF-8
     if src:sub(1,3) == "\xEF\xBB\xBF" then src = src:sub(4) end
 
-    -- Tenta como texto primeiro; "bt" aceita ambos (bytecode LuaJIT incluso)
+    -- Tenta como texto; "bt" aceita texto e bytecode (Luraph included)
     local fn, cerr = load(src, "@"..label, "bt", env)
     if not fn then
-        -- Segunda tentativa: força bytecode puro
         fn, cerr = load(src, "@"..label, "b", env)
     end
     if not fn then return false, "compile: "..tostring(cerr) end
 
-    -- ── Executa dentro de uma coroutine com budget hook ──────────────
-    -- CRÍTICO: NÃO usar pcall(fn) direto na thread principal.
-    -- Se o script tiver loop while-true + Wait(0) no nível de módulo,
-    -- Wait() fora de coroutine é no-op → loop infinito trava o servidor.
-    -- Executar como coroutine: Wait() faz yield e o budget hook mata
-    -- loops que não cedem controle.
-    local MAX_TOP_INSTRS = 200000  -- instruções máximas para o top-level
+    -- ── Executa como coroutine com limite de yields ──────────────────
+    -- Wait() dentro da coroutine → yield → pump avança → continua
+    -- Loop infinito com Wait(0) → depois de MAX_TOP_YIELDS yields, mata
+    -- Loop sem Wait (busy) → a coroutine NUNCA yielda → resume fica rodando
+    --   até o script terminar naturalmente (não há hook no LuaJIT).
+    --   Para loops busy verdadeiros no top-level, não há proteção perfeita
+    --   no LuaJIT — mas scripts Luraph reais usam Wait(0), não busy-loops.
+    local MAX_TOP_YIELDS = 5   -- 5 Wait() no top-level é suficiente para init
     local co = coroutine.create(fn)
-
-    local instr_count = 0
-    local budget_killed = false
-    local function top_budget()
-        instr_count = instr_count + 1
-        if instr_count >= MAX_TOP_INSTRS then
-            budget_killed = true
-            error("__budget__", 2)
-        end
-    end
-    pcall(debug.sethook, co, top_budget, "", 1000)
-
-    -- Pump: resume até dead, yield (Wait) ou budget
-    local MAX_TOP_YIELDS = 30  -- máximo de Wait() yields no top-level
     local yields = 0
-    local last_err
+
     while coroutine.status(co) ~= "dead" do
         local ok, val = coroutine.resume(co)
         if not ok then
-            pcall(debug.sethook, co, nil)
-            if budget_killed or (type(val)=="string" and val:find("__budget__")) then
-                return false, "top-level busy-loop (>200k instrs): "..label
+            -- Erro legítimo de runtime
+            local msg = tostring(val or "")
+            if msg:find("__topmanywaits__") then
+                return false, "top-level loop (>"..MAX_TOP_YIELDS.." Wait() calls): "..label
             end
-            return false, "runtime: "..tostring(val)
+            return false, "runtime: "..msg
         end
-        -- yielded via Wait(ms) — conta e continua
+        -- Script yielded via Wait() — avança contador
         yields = yields + 1
-        if yields > MAX_TOP_YIELDS then
-            pcall(debug.sethook, co, nil)
-            return false, "top-level loop (>"..MAX_TOP_YIELDS.." yields): "..label
+        if yields >= MAX_TOP_YIELDS then
+            -- Mata a coroutine fechando-a via erro no próximo resume
+            coroutine.resume(co, "__topmanywaits__")
+            return false, "top-level loop (>"..MAX_TOP_YIELDS.." Wait() calls): "..label
         end
     end
-    pcall(debug.sethook, co, nil)
     return true
 end
 
