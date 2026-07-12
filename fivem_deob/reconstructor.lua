@@ -14,41 +14,88 @@ local REC = {}
 -- ── Detecta OS ──────────────────────────────────────────────────────
 local IS_WINDOWS = package.config:sub(1,1) == '\\'
 
--- ── mkdir portável (sem -p) ─────────────────────────────────────────
-local function mkdir(dir)
+-- ── mkdir portável: cria UM diretório (não recursivo) ───────────────
+-- Tenta via lfs primeiro, fallback via os.execute
+local _lfs_ok, _lfs = pcall(require, "lfs")
+
+local function mkdir_one(dir)
+    -- Normaliza separadores para o SO atual
+    local d = IS_WINDOWS and dir:gsub('/', '\\') or dir
+    if _lfs_ok then
+        -- lfs.mkdir falha silenciosamente se já existe — isso é OK
+        _lfs.mkdir(d)
+    end
+    -- Sempre tenta também via os.execute como fallback extra
+    -- (lfs.mkdir pode falhar em caminhos OneDrive/rede sem erro visível)
     if IS_WINDOWS then
-        local d = dir:gsub('/', '\\')
-        os.execute('mkdir "'..d..'" 2>nul')
+        os.execute('md "'..d..'" 2>nul')
     else
-        os.execute('mkdir -p "'..dir..'"')
+        os.execute('mkdir "'..d..'" 2>/dev/null')
     end
 end
 
 -- ── Cria diretório e todos os pais de forma portável ────────────────
+-- Funciona em Windows (C:\foo\bar) e Linux (/foo/bar)
 local function mkdirp(dir)
-    -- Normaliza separadores
-    local sep = IS_WINDOWS and '\\' or '/'
-    local norm = dir:gsub('\\', '/'):gsub('/$', '')
-    -- Divide o path
-    local parts = {}
-    for p in norm:gmatch('[^/]+') do parts[#parts+1] = p end
-    -- Se começa com '/' (Unix raiz) ou letra de drive (Windows)
-    local prefix = ""
-    if norm:sub(1,1) == "/" then
-        prefix = "/"
-    elseif norm:match("^%a:/") then
-        prefix = norm:match("^%a:/")
+    -- No Linux sem lfs: usa mkdir -p diretamente (mais simples e confiável)
+    if not IS_WINDOWS and not _lfs_ok then
+        os.execute('mkdir -p "' .. dir .. '"')
+        return
     end
-    local current = prefix
+
+    -- No Linux com lfs: tenta mkdir -p primeiro (mais robusto),
+    -- cai no incremental se falhar
+    if not IS_WINDOWS and _lfs_ok then
+        local ok = os.execute('mkdir -p "' .. dir .. '" 2>/dev/null')
+        if ok then return end
+        -- Se mkdir -p falhou por algum motivo, continua para o loop incremental
+    end
+
+    -- Windows (ou Linux com mkdir -p falho):
+    -- Abordagem dupla: tenta 'md' com o caminho COMPLETO primeiro
+    -- (funciona quando todos os pais já existem), depois loop incremental
+    local norm = dir:gsub('\\', '/'):gsub('/+$', '')
+
+    -- Detecta drive letter: "C:/Users/foo" → prefix="C:", rest="/Users/foo"
+    local prefix = ""
+    local rest   = norm
+    if norm:match("^%a:[/\\]") then
+        prefix = norm:sub(1, 2)   -- "C:"
+        rest   = norm:sub(3)      -- "/Users/foo"
+    end
+
+    -- Remove leading slash do rest, guarda se havia
+    local has_root = rest:sub(1,1) == "/"
+    if has_root then rest = rest:sub(2) end
+
+    -- Divide em componentes não-vazios
+    local parts = {}
+    for p in rest:gmatch("[^/]+") do
+        if p ~= "" then parts[#parts+1] = p end
+    end
+
+    -- Reconstrói e cria incrementalmente
+    -- No Windows: começa com "C:" (sem barra); no Linux: com "/" ou ""
+    local current
+    if IS_WINDOWS then
+        current = prefix   -- "C:" ou "" (caminho relativo)
+    else
+        current = has_root and "/" or ""
+    end
+
     for _, part in ipairs(parts) do
-        if current == "" then
-            current = part
-        elseif current:sub(-1) == "/" or current:sub(-1) == "\\" then
-            current = current..part
+        if current == "" or current == "/" then
+            current = current .. part
         else
-            current = current.."/"..part
+            current = current .. "/" .. part
         end
-        mkdir(current)
+        mkdir_one(current)
+    end
+
+    -- Tentativa final com caminho completo usando md (robusto para OneDrive)
+    if IS_WINDOWS then
+        local full = norm:gsub('/', '\\')
+        os.execute('md "' .. full .. '" 2>nul')
     end
 end
 
