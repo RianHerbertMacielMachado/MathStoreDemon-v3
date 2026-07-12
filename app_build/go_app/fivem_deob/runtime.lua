@@ -133,7 +133,30 @@ function RT.new_env(side, opts)
     end
     env.LoadResourceFile = function(res, file)
         log_fn("LoadResourceFile", res.."/"..file)
-        return nil
+        -- Retorna conteúdo vazio mas não-nil para evitar que scripts
+        -- com guard "if not LoadResourceFile(...) then return end" saiam cedo
+        -- Tenta ler o arquivo real do disco primeiro
+        local real_path = nil
+        -- Tenta caminhos comuns: resources/[res]/[file] ou ../[res]/[file]
+        local try_paths = {
+            res.."/"..file,
+            "../"..res.."/"..file,
+            "../../"..res.."/"..file,
+        }
+        for _, p in ipairs(try_paths) do
+            local f = io.open(p, "r")
+            if f then
+                local content = f:read("*a")
+                f:close()
+                if content and content ~= "" then
+                    log_fn("LoadResourceFile.REAL", p)
+                    return content
+                end
+            end
+        end
+        -- Retorna string vazia (não-nil) para scripts que fazem
+        -- "if not LoadResourceFile(...) then return end"
+        return ""
     end
     env.GetConvar = function(name, default)
         data.convars_read[name] = default

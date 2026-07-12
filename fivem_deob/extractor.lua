@@ -22,28 +22,46 @@ local IS_WINDOWS = package.config:sub(1,1) == '\\'
 
 -- ── Resolve caminho absoluto de forma portável ───────────────────────
 -- Retorna o caminho absoluto de `dir` (funciona em Windows e Linux)
+-- Prioriza extração puramente em Lua para evitar problemas com
+-- io.popen em caminhos OneDrive/rede no Windows
 local function resolve_abs_path(dir)
-    -- Tenta via io.popen com o comando correto por OS
+    -- Método 1: verificação rápida — se já é absoluto, retorna como está
+    -- Windows: C:\... ou C:/... ou \\...
+    -- Linux: /...
+    if IS_WINDOWS then
+        if dir:match("^%a:[/\\]") or dir:match("^\\\\") then
+            -- Já é absoluto — normaliza separadores e remove trailing slash
+            local norm = dir:gsub('\\', '/'):gsub('[/\\]+$', '')
+            return norm
+        end
+    else
+        if dir:sub(1,1) == "/" then
+            return dir:gsub('[/]+$', '')
+        end
+    end
+
+    -- Método 2: caminho relativo → tenta via io.popen
     local cmd
     if IS_WINDOWS then
-        -- Windows: cd /d "dir" && cd  (imprime diretório atual)
         local d = dir:gsub('/', '\\')
-        cmd = 'cd /d "'..d..'" 2>nul && cd'
+        cmd = 'cd /d "' .. d .. '" 2>nul && cd'
     else
-        cmd = 'cd "'..dir..'" 2>/dev/null && pwd'
+        cmd = 'cd "' .. dir .. '" 2>/dev/null && pwd'
     end
-    local ph = io.popen(cmd)
-    if ph then
-        local result = ph:read("*l")
-        ph:close()
-        if result and result ~= "" then
-            -- Remove \r no Windows
-            result = result:gsub("\r$", ""):gsub("\\$", "")
+    local ok_p, ph = pcall(io.popen, cmd)
+    if ok_p and ph then
+        local ok_r, result = pcall(function() return ph:read("*l") end)
+        pcall(function() ph:close() end)
+        if ok_r and result and result ~= "" then
+            result = result:gsub("\r$", ""):gsub("[/\\]+$", "")
+            -- Normaliza para forward-slashes
+            result = result:gsub('\\', '/')
             return result
         end
     end
-    -- Fallback: retorna o dir original
-    return dir
+
+    -- Método 3: fallback — retorna dir normalizado sem trailing slash
+    return dir:gsub('[/\\]+$', '')
 end
 
 -- ── Extrai nome do resource a partir do caminho absoluto ─────────────
@@ -82,28 +100,35 @@ local function scan_all_lua(resource_dir)
         local function scan_dir(dir, rel_prefix, depth)
             if depth > MAX_DEPTH then return end
             if #files >= MAX_FILES then return end
-            local ok_iter, iter = pcall(lfs.dir, dir)
-            if not ok_iter then return end
-            for entry in iter do
-                if #files >= MAX_FILES then break end
-                if entry ~= "." and entry ~= ".." then
-                    local full = dir.."/"..entry
-                    local rel  = rel_prefix == "" and entry or (rel_prefix.."/"..entry)
-                    local attr = lfs.attributes(full)
-                    if attr then
-                        if attr.mode == "directory" then
-                            if not SKIP_DIRS[entry] then
-                                scan_dir(full, rel, depth + 1)
-                            end
-                        elseif attr.mode == "file" and entry:match("%.lua$") then
-                            if not visited[rel] then
-                                visited[rel] = true
-                                files[#files+1] = rel
+            -- pcall em lfs.dir para suprimir erros de acesso (ex: OneDrive no Windows)
+            local ok_iter, iter_or_err = pcall(lfs.dir, dir)
+            if not ok_iter then return end  -- silently skip inaccessible dirs
+            -- iter_or_err é a função iteradora retornada por lfs.dir
+            local ok_loop, loop_err = pcall(function()
+                for entry in iter_or_err do
+                    if #files >= MAX_FILES then break end
+                    if entry ~= "." and entry ~= ".." then
+                        local full = dir.."/"..entry
+                        local rel  = rel_prefix == "" and entry or (rel_prefix.."/"..entry)
+                        -- pcall em lfs.attributes para evitar "Acesso negado" em Windows
+                        local ok_attr, attr = pcall(lfs.attributes, full)
+                        if ok_attr and attr then
+                            if attr.mode == "directory" then
+                                if not SKIP_DIRS[entry] then
+                                    scan_dir(full, rel, depth + 1)
+                                end
+                            elseif attr.mode == "file" and entry:match("%.lua$") then
+                                if not visited[rel] then
+                                    visited[rel] = true
+                                    files[#files+1] = rel
+                                end
                             end
                         end
                     end
                 end
-            end
+            end)
+            -- Se o loop de iteração falhou (ex: lfs iterator throws), silently skip
+            if not ok_loop then return end
         end
         scan_dir(resource_dir, "", 0)
     else
@@ -348,7 +373,16 @@ function EX.run(resource_dir, opts)
         end
     end
 
-    RT.run_threads(sv_env, max_ticks)
+    -- Pumpa threads após carregar todos os scripts
+    RT.run_threads(sv_env, max_ticks * 2)
+
+    -- Dispara onResourceStart antes dos outros eventos
+    -- (alguns scripts registram handlers dentro de onResourceStart)
+    RT.fire_event(sv_env, "onResourceStart", resource_name)
+    RT.run_threads(sv_env, max_ticks * 2)
+    -- Também via TriggerEvent para capturar scripts que usam TriggerEvent internamente
+    sv_env.TriggerEvent("onResourceStart", resource_name)
+    RT.run_threads(sv_env, max_ticks * 2)
 
     -- Dispara eventos server
     local sv_data = RT.get_data(sv_env)
@@ -376,9 +410,21 @@ function EX.run(resource_dir, opts)
         RT.run_threads(sv_env, max_ticks)
     end
 
-    -- Também tenta disparar onResourceStart com e sem o nome
+    -- Dispara onResourceStart novamente (caso scripts registrem handlers dentro dele)
     RT.fire_event(sv_env, "onResourceStart", resource_name)
-    RT.run_threads(sv_env, max_ticks)
+    RT.run_threads(sv_env, max_ticks * 2)
+
+    -- Dispara todos os eventos registrados no servidor que ainda não foram disparados
+    -- (lida com scripts que registram handlers APÓS onResourceStart)
+    local sv_fired = { onResourceStart=true, playerConnecting=true, playerDropped=true }
+    for evname in pairs(sv_data.event_handlers) do
+        if not sv_fired[evname] then
+            log_sv("FIRE_EXTRA", evname)
+            RT.fire_event(sv_env, evname)
+            RT.run_threads(sv_env, max_ticks)
+            sv_fired[evname] = true
+        end
+    end
 
     -- Dispara comandos registrados com args vazios (para descoberta)
     for name, handler in pairs(sv_data.cmd_handler_map) do
