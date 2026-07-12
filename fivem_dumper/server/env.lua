@@ -896,27 +896,56 @@ end
 
 -----------------------------------------------------------------------
 -- Carrega um arquivo .lua (texto ou bytecode Luraph) no env
+-- resource_name : nome do resource dono do arquivo
+-- path          : path absoluto (para extrair rel e como fallback)
+-- env           : ambiente instrumentado
+-- label         : label para mensagens de erro
 -- Retorna true ou false, errmsg
 --
--- EXECUÇÃO EM COROUTINE — obrigatório porque:
---   • Na thread principal coroutine.running()==nil → Wait() é no-op
---   • Script com "while cond do Wait(0) end" no top-level vira loop infinito
--- A coroutine permite que Wait() faça yield real, e o contador de yields
--- mata loops que nunca terminam.
--- NOTA: debug.sethook em coroutines não funciona no LuaJIT do FiveM.
--- O mecanismo de proteção é via Wait() yield count APENAS.
+-- USA LoadResourceFile (API nativa FiveM) ao invés de io.open.
+-- io.open bloqueia indefinidamente em drives de rede mapeados (SMB).
+-- EXECUÇÃO EM COROUTINE: Wait() top-level faz yield real; MAX_TOP_YIELDS=5
+-- mata loops Wait(0) infinitos. Loops busy (sem Wait) não têm proteção
+-- no LuaJIT — mas Luraph real sempre usa Wait().
 -----------------------------------------------------------------------
-function ENV.load_file(path, env, label)
+function ENV.load_file(resource_name, path, env, label)
     label = label or path
-    local f, ferr = io.open(path, "rb")
-    if not f then return false, "cannot open: "..tostring(ferr) end
-    local src = f:read("*a")
-    f:close()
+
+    -- Extrai path relativo ao resource para LoadResourceFile
+    -- Ex: "F:/server/resources/MyRes/server/main.lua" → "server/main.lua"
+    local src
+    if resource_name then
+        -- Tenta match com o nome do resource no path
+        local rel = path:match("[/\\]"..resource_name:gsub("%-","%%%-").."[/\\](.+)$")
+        if rel then
+            rel = rel:gsub("\\", "/")
+            src = LoadResourceFile(resource_name, rel)
+        end
+        -- Se não achou com o nome, tenta só o filename como último recurso
+        if not src then
+            local fname = path:match("[/\\]([^/\\]+)$")
+            if fname then
+                src = LoadResourceFile(resource_name, fname)
+            end
+        end
+    end
+
+    -- Fallback: io.open (caso LoadResourceFile retorne nil)
+    if not src then
+        local f, ferr = io.open(path, "rb")
+        if not f then return false, "cannot open: "..tostring(ferr) end
+        src = f:read("*a")
+        f:close()
+    end
+
+    if not src or src == "" then
+        return false, "arquivo vazio ou não encontrado: "..tostring(path)
+    end
 
     -- Remove BOM UTF-8
     if src:sub(1,3) == "\xEF\xBB\xBF" then src = src:sub(4) end
 
-    -- Tenta como texto; "bt" aceita texto e bytecode (Luraph included)
+    -- Compila: "bt" aceita texto e bytecode (Luraph included)
     local fn, cerr = load(src, "@"..label, "bt", env)
     if not fn then
         fn, cerr = load(src, "@"..label, "b", env)
@@ -924,30 +953,21 @@ function ENV.load_file(path, env, label)
     if not fn then return false, "compile: "..tostring(cerr) end
 
     -- ── Executa como coroutine com limite de yields ──────────────────
-    -- Wait() dentro da coroutine → yield → pump avança → continua
-    -- Loop infinito com Wait(0) → depois de MAX_TOP_YIELDS yields, mata
-    -- Loop sem Wait (busy) → a coroutine NUNCA yielda → resume fica rodando
-    --   até o script terminar naturalmente (não há hook no LuaJIT).
-    --   Para loops busy verdadeiros no top-level, não há proteção perfeita
-    --   no LuaJIT — mas scripts Luraph reais usam Wait(0), não busy-loops.
-    local MAX_TOP_YIELDS = 5   -- 5 Wait() no top-level é suficiente para init
+    local MAX_TOP_YIELDS = 5
     local co = coroutine.create(fn)
     local yields = 0
 
     while coroutine.status(co) ~= "dead" do
         local ok, val = coroutine.resume(co)
         if not ok then
-            -- Erro legítimo de runtime
             local msg = tostring(val or "")
             if msg:find("__topmanywaits__") then
                 return false, "top-level loop (>"..MAX_TOP_YIELDS.." Wait() calls): "..label
             end
             return false, "runtime: "..msg
         end
-        -- Script yielded via Wait() — avança contador
         yields = yields + 1
         if yields >= MAX_TOP_YIELDS then
-            -- Mata a coroutine fechando-a via erro no próximo resume
             coroutine.resume(co, "__topmanywaits__")
             return false, "top-level loop (>"..MAX_TOP_YIELDS.." Wait() calls): "..label
         end

@@ -148,19 +148,28 @@ end
 -- Lê e parseia o fxmanifest.lua de um resource
 -- Retorna tabela { server={}, client={}, shared={} } ou nil, err
 -----------------------------------------------------------------------
-local function parse_manifest(resource_path)
+local function parse_manifest(resource_name, resource_path)
+    -- Usa LoadResourceFile (API nativa FiveM) — evita io.open que pode
+    -- bloquear em drives de rede mapeados (SMB/SAMBA).
+    local src = LoadResourceFile(resource_name, "fxmanifest.lua")
     local manifest_path = resource_path.."/fxmanifest.lua"
-    local f = io.open(manifest_path, "rb")
-    if not f then
-        -- Tenta __resource.lua (formato legado)
+    if not src then
+        -- Tenta formato legado __resource.lua
+        src = LoadResourceFile(resource_name, "__resource.lua")
         manifest_path = resource_path.."/__resource.lua"
-        f = io.open(manifest_path, "rb")
     end
-    if not f then
-        return nil, "fxmanifest.lua não encontrado em: "..resource_path
+    if not src then
+        -- Último fallback: io.open (caso LoadResourceFile não funcione)
+        local f = io.open(manifest_path:gsub("__resource%.lua$","fxmanifest.lua"), "rb")
+        if not f then
+            f = io.open(resource_path.."/__resource.lua", "rb")
+        end
+        if not f then
+            return nil, "fxmanifest.lua não encontrado em: "..resource_path
+        end
+        src = f:read("*a")
+        f:close()
     end
-    local src = f:read("*a")
-    f:close()
 
     local result = { server={}, client={}, shared={} }
 
@@ -287,7 +296,7 @@ local function analyse_resource(resource_name, verbose)
     -- ── 2. Parseia o manifest ──────────────────────────────────────
     print("^5[Dumper]^7 Lendo manifest...")
     Wait(0)
-    local manifest, merr = parse_manifest(resource_path)
+    local manifest, merr = parse_manifest(resource_name, resource_path)
     if not manifest then
         return nil, "Manifest: "..tostring(merr)
     end
@@ -314,7 +323,7 @@ local function analyse_resource(resource_name, verbose)
         local path = resource_path.."/"..rel
         log_sv("LOAD", rel)
         Wait(0)
-        local ok, err = ENV.load_file(path, sv_env, rel)
+        local ok, err = ENV.load_file(resource_name, path, sv_env, rel)
         if not ok then log_sv("LOAD.ERROR", rel.." — "..tostring(err)) end
     end
     pump(sv_env, MAX_TICKS)
@@ -324,7 +333,7 @@ local function analyse_resource(resource_name, verbose)
         local path = resource_path.."/"..rel
         log_sv("LOAD", rel)
         Wait(0)
-        local ok, err = ENV.load_file(path, sv_env, rel)
+        local ok, err = ENV.load_file(resource_name, path, sv_env, rel)
         if not ok then log_sv("LOAD.ERROR", rel.." — "..tostring(err)) end
     end
     pump(sv_env, MAX_TICKS)
@@ -383,7 +392,7 @@ local function analyse_resource(resource_name, verbose)
         local path = resource_path.."/"..rel
         log_cl("LOAD", rel)
         Wait(0)
-        local ok, err = ENV.load_file(path, cl_env, rel)
+        local ok, err = ENV.load_file(resource_name, path, cl_env, rel)
         if not ok then log_cl("LOAD.ERROR", rel.." — "..tostring(err)) end
     end
     pump(cl_env, MAX_TICKS)
@@ -393,7 +402,7 @@ local function analyse_resource(resource_name, verbose)
         local path = resource_path.."/"..rel
         log_cl("LOAD", rel)
         Wait(0)
-        local ok, err = ENV.load_file(path, cl_env, rel)
+        local ok, err = ENV.load_file(resource_name, path, cl_env, rel)
         if not ok then log_cl("LOAD.ERROR", rel.." — "..tostring(err)) end
     end
     pump(cl_env, MAX_TICKS)
