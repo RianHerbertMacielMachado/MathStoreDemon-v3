@@ -5,3 +5,4 @@ app_build/fivem_deob/
 app_build/fivem_deob_app.spec
 app_build/fivem_deob_app.py
 app_build/lua54.exe
+tools/__pycache__/

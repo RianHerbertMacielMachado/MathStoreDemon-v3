@@ -3,7 +3,7 @@ game 'gta5'
 
 name        'FiveM Dumper'
 description 'Deobfuscates any resource using FiveM LuaJIT: LoadResourceFile -> load() -> string.dump(). Works with Luraph.'
-version     '3.0.0'
+version     '3.1.0'
 author      'fivem_dumper'
 
 shared_scripts {
