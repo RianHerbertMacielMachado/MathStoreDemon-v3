@@ -510,77 +510,153 @@ local function main()
         print("")
     end
 
-    -- ── Fase 4: Luraph VM Deobfuscation ──────────────────────────────
-    -- Detecta arquivos Luraph entre todos os .lua do resource e
-    -- gera código Lua legível em deob_output/luraph_lift/<arquivo>.lua
-    local n_all_files = result.all_files and #result.all_files or 0
-    if not LLIFT then
-        -- mensagem já impressa acima
-    elseif n_all_files == 0 then
-        print(C.dim("  [luraph_lift] nenhum .lua encontrado no resource — pulando"))
-    else
-        local luraph_dir = opts.output_dir .. "/luraph_lift"
-        local luraph_count = 0
-        local luraph_files = {}
-
-        -- Pré-detecta quais arquivos são Luraph
+    -- ── Fase 4: Luraph VM Deobfuscation ──────────────────────────────────────
+    -- Escaneia DIRETAMENTE o diretório do resource para encontrar arquivos Luraph.
+    -- NÃO depende de result.all_files (que pode ficar vazio se lfs não está disponível).
+    -- Usa io.popen para listagem de arquivos — funciona em Windows e Linux.
+    if LLIFT then
         local PARSER = require("fivem_deob.luraph_lift.parser")
-        print(C.dim(string.format("  [luraph_lift] escaneando %d arquivos...", n_all_files)))
-        for _, rel in ipairs(result.all_files) do
-            -- Normaliza separadores: Windows usa \ mas concatenamos com /
-            local abs_path = opts.resource_dir .. "/" .. rel
-            abs_path = abs_path:gsub("\\\\", "/"):gsub("//", "/")
-            local src, _ = PARSER.read_source(abs_path)
-            if src and PARSER.is_luraph(src) then
-                luraph_files[#luraph_files+1] = { rel=rel, abs=abs_path }
-            end
-        end
+        local IS_WIN  = package.config:sub(1,1) == "\\"
+        local rdir    = opts.resource_dir:gsub("\\","/")
+        local luraph_dir = opts.output_dir .. "/luraph_lift"
 
-        if #luraph_files == 0 then
-            print(C.dim(string.format("  [luraph_lift] 0/%d arquivos Luraph detectados", n_all_files)))
-        end
+        -- ── Coleta todos os .lua do resource via io.popen ─────────────────────
+        local raw_files = {}
+        local visited_f = {}
 
-        if #luraph_files > 0 then
-            print(C.bold("  ── LURAPH DEOBFUSCATION ───────────────────"))
-            print(string.format("  %s arquivos Luraph detectados — deobfuscando...",
-                C.yellow(tostring(#luraph_files))))
-            print("")
+        -- Diretórios a ignorar
+        local skip = { deob_output=true, [".git"]=true, node_modules=true,
+                       fivem_deob=true, app_build=true, debug_sim=true }
 
-            -- Cria diretório de saída (portável: tenta mkdir -p no Unix, md no Windows)
-            local IS_WIN = package.config:sub(1,1) == "\\"
+        local function collect_popen()
+            local pipe
             if IS_WIN then
-                os.execute('md "' .. luraph_dir:gsub("/","\\") .. '" 2>nul')
+                local d = rdir:gsub("/","\\")
+                pipe = io.popen('dir /s /b "'..d..'\\*.lua" 2>nul')
             else
-                os.execute('mkdir -p "' .. luraph_dir .. '"')
+                local cmd = 'find "'..rdir..'" -maxdepth 5'
+                    ..' \\( -name deob_output -o -name .git -o -name fivem_deob'
+                    ..' -o -name app_build -o -name node_modules \\)'
+                    ..' -prune -o -name "*.lua" -print 2>/dev/null'
+                pipe = io.popen(cmd)
             end
+            if not pipe then return end
+            local prefix = #rdir + 1
+            for line in pipe:lines() do
+                line = line:gsub("\r$",""):gsub("\\","/")
+                if line ~= "" then
+                    local rel = line:sub(prefix+1):gsub("^/","")
+                    if rel ~= "" and not visited_f[rel]
+                        and not rel:match("^deob_output")
+                        and not rel:match("^%.git") then
+                        -- Skip if any path component is in skip list
+                        local ok = true
+                        for part in rel:gmatch("[^/]+") do
+                            if skip[part] then ok = false; break end
+                        end
+                        if ok then
+                            visited_f[rel] = true
+                            raw_files[#raw_files+1] = rel
+                        end
+                    end
+                end
+            end
+            pcall(function() pipe:close() end)
+        end
 
-            for idx, entry in ipairs(luraph_files) do
-                -- Achata a estrutura de pastas: client/main.lua → client_main_deob.lua
-                local out_flat = entry.rel:gsub("[/\\]", "_"):gsub("%.lua$", "_deob.lua")
-                local out_path = luraph_dir .. "/" .. out_flat
+        -- Tenta popen; fallback para result.all_files se popen falhar
+        local ok_popen, popen_err = pcall(collect_popen)
+        if not ok_popen or #raw_files == 0 then
+            -- Fallback: usa result.all_files do extractor
+            if result.all_files and #result.all_files > 0 then
+                for _, rel in ipairs(result.all_files) do
+                    if not visited_f[rel] then
+                        visited_f[rel] = true
+                        raw_files[#raw_files+1] = rel
+                    end
+                end
+            end
+        end
 
-                io.write(string.format("  [%d/%d] %s ... ", idx, #luraph_files,
-                    C.cyan(entry.rel)))
-                io.flush()
+        print(C.dim(string.format("  [luraph_lift] escaneando %d arquivos .lua...", #raw_files)))
 
-                local ok_deob, deob_err = pcall(function()
-                    LLIFT.deobfuscate(entry.abs, out_path, { verbose = false })
-                end)
-
-                if ok_deob then
-                    print(C.green("OK"))
-                    luraph_count = luraph_count + 1
-                    files_written[#files_written+1] = out_path
-                else
-                    print(C.red("FALHOU") .. C.dim(" — " .. tostring(deob_err)))
+        if #raw_files == 0 then
+            print(C.dim("  [luraph_lift] nenhum .lua encontrado — verifique o caminho do resource"))
+        else
+            -- ── Detecta quais arquivos são Luraph ─────────────────────────────
+            local luraph_files = {}
+            for _, rel in ipairs(raw_files) do
+                -- Constrói caminho absoluto com separador correto
+                local abs_path = rdir .. "/" .. rel
+                local src, _ = PARSER.read_source(abs_path)
+                if src and PARSER.is_luraph(src) then
+                    luraph_files[#luraph_files+1] = {
+                        rel = rel,
+                        abs = abs_path,
+                        ver = PARSER.luraph_version(src),
+                    }
                 end
             end
 
-            print("")
-            print(string.format("  %s/%s arquivos deobfuscados com sucesso.",
-                C.yellow(tostring(luraph_count)), tostring(#luraph_files)))
-            print(C.dim("  Arquivos legíveis em: " .. luraph_dir))
-            print("")
+            if #luraph_files == 0 then
+                print(C.dim(string.format(
+                    "  [luraph_lift] 0/%d arquivos Luraph detectados (nenhum VM obfuscado encontrado)",
+                    #raw_files)))
+            else
+                print(C.bold("  ── LURAPH DEOBFUSCATION ─────────────────────────────"))
+                print(string.format("  %s/%s arquivos Luraph encontrados — deobfuscando...",
+                    C.yellow(tostring(#luraph_files)), tostring(#raw_files)))
+                print("")
+
+                -- Cria diretório de saída
+                if IS_WIN then
+                    os.execute('md "' .. luraph_dir:gsub("/","\\") .. '" 2>nul')
+                else
+                    os.execute('mkdir -p "' .. luraph_dir .. '"')
+                end
+
+                local luraph_count = 0
+                for idx, entry in ipairs(luraph_files) do
+                    local out_flat = entry.rel:gsub("[/\\]","_"):gsub("%.lua$","_deob.lua")
+                    local out_path = luraph_dir .. "/" .. out_flat
+
+                    io.write(string.format("  [%d/%d] %s (%s) ... ",
+                        idx, #luraph_files,
+                        C.cyan(entry.rel),
+                        C.dim(entry.ver or "?")))
+                    io.flush()
+
+                    -- Deobfusca e escreve o arquivo de saída em uma única chamada
+                    local deob_result
+                    local ok_deob, deob_err = pcall(function()
+                        deob_result = LLIFT.deobfuscate(entry.abs, out_path, { verbose=false })
+                    end)
+
+                    if ok_deob and deob_result then
+                        local np = deob_result.protos and #deob_result.protos or 0
+                        if np > 0 then
+                            print(C.green("OK") .. C.dim(string.format(" [%d protos]", np)))
+                        else
+                            print(C.green("OK") .. C.dim(" [parcial — v2/anti-tamper]"))
+                        end
+                        luraph_count = luraph_count + 1
+                        files_written[#files_written+1] = out_path
+                    elseif ok_deob then
+                        -- deobfuscate retornou nil (não deveria, mas protege)
+                        print(C.yellow("OK?") .. C.dim(" [resultado nil]"))
+                        luraph_count = luraph_count + 1
+                        files_written[#files_written+1] = out_path
+                    else
+                        print(C.red("FALHOU") .. C.dim(" — " .. tostring(deob_err):sub(1,80)))
+                    end
+                end
+
+                print("")
+                print(string.format("  %s/%s arquivos deobfuscados.",
+                    C.yellow(tostring(luraph_count)), tostring(#luraph_files)))
+                print(C.dim("  Saída: " .. luraph_dir))
+                print("")
+            end
         end
     end
 

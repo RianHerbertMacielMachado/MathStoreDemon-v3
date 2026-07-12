@@ -94,23 +94,31 @@ local function scan_all_lua(resource_dir)
     local files = {}
     local visited = {}
 
-    -- Usa lfs se disponível, senão fallback via os.execute + tmpfile
+    -- Helper: adiciona arquivo à lista se não visitado e não excluído
+    local function add_file(rel)
+        rel = rel:gsub("\\","/"):gsub("^/","")
+        if rel == "" then return end
+        if visited[rel] then return end
+        if rel:match("^deob_output") then return end
+        if rel:match("^%.git") then return end
+        visited[rel] = true
+        files[#files+1] = rel
+    end
+
+    -- ── Tentativa 1: lfs (LuaFileSystem) ─────────────────────────────
     local ok_lfs, lfs = pcall(require, "lfs")
     if ok_lfs then
         local function scan_dir(dir, rel_prefix, depth)
             if depth > MAX_DEPTH then return end
             if #files >= MAX_FILES then return end
-            -- pcall em lfs.dir para suprimir erros de acesso (ex: OneDrive no Windows)
             local ok_iter, iter_or_err = pcall(lfs.dir, dir)
-            if not ok_iter then return end  -- silently skip inaccessible dirs
-            -- iter_or_err é a função iteradora retornada por lfs.dir
-            local ok_loop, loop_err = pcall(function()
+            if not ok_iter then return end
+            pcall(function()
                 for entry in iter_or_err do
                     if #files >= MAX_FILES then break end
                     if entry ~= "." and entry ~= ".." then
                         local full = dir.."/"..entry
                         local rel  = rel_prefix == "" and entry or (rel_prefix.."/"..entry)
-                        -- pcall em lfs.attributes para evitar "Acesso negado" em Windows
                         local ok_attr, attr = pcall(lfs.attributes, full)
                         if ok_attr and attr then
                             if attr.mode == "directory" then
@@ -118,58 +126,91 @@ local function scan_all_lua(resource_dir)
                                     scan_dir(full, rel, depth + 1)
                                 end
                             elseif attr.mode == "file" and entry:match("%.lua$") then
-                                if not visited[rel] then
-                                    visited[rel] = true
-                                    files[#files+1] = rel
-                                end
+                                add_file(rel)
                             end
                         end
                     end
                 end
             end)
-            -- Se o loop de iteração falhou (ex: lfs iterator throws), silently skip
-            if not ok_loop then return end
         end
         scan_dir(resource_dir, "", 0)
+        if #files > 0 then
+            table.sort(files)
+            return files
+        end
+        -- lfs está disponível mas retornou 0 arquivos — tenta popen como fallback
+    end
+
+    -- ── Tentativa 2: io.popen (sem arquivo temporário) ────────────────
+    -- Mais confiável no Windows que os.execute + os.tmpname
+    local prefix_len = #resource_dir + 1
+    local pipe, pipe_err
+
+    if IS_WINDOWS then
+        -- dir /s /b lista todos os arquivos recursivamente com caminho completo
+        local d = resource_dir:gsub("/","\\")
+        pipe = io.popen('dir /s /b "'..d..'\\*.lua" 2>nul')
     else
-        -- Fallback sem lfs: usa os.execute para listar
-        -- Windows: dir /s /b, Linux: find com -maxdepth
+        local cmd = 'find "'..resource_dir..'" -maxdepth '..MAX_DEPTH
+            ..[[ \( -name deob_output -o -name .git -o -name fivem_deob]]
+            ..[[ -o -name app_build -o -name debug_sim -o -name node_modules \)]]
+            ..[[ -prune -o -name "*.lua" -print 2>/dev/null]]
+        pipe = io.popen(cmd)
+    end
+
+    if pipe then
+        local count = 0
+        for line in pipe:lines() do
+            if count >= MAX_FILES then break end
+            line = line:gsub("\r$","")
+            if line ~= "" then
+                local rel = line:sub(prefix_len+1):gsub("\\","/"):gsub("^/","")
+                if rel ~= "" and not visited[rel]
+                    and not rel:match("^deob_output")
+                    and not rel:match("^%.git") then
+                    visited[rel] = true
+                    files[#files+1] = rel
+                    count = count + 1
+                end
+            end
+        end
+        pcall(function() pipe:close() end)
+    end
+
+    -- ── Tentativa 3: os.execute + tmpfile (último recurso) ───────────
+    if #files == 0 then
         local tmp = os.tmpname()
+        -- No Windows, os.tmpname pode retornar path sem extensão válida
+        -- Acrescenta extensão e prefixo de temp conhecido
+        if IS_WINDOWS and not tmp:match("%.") then
+            tmp = tmp .. ".txt"
+        end
         local cmd
         if IS_WINDOWS then
-            local d = resource_dir:gsub('/', '\\')
+            local d = resource_dir:gsub("/","\\")
             cmd = 'dir /s /b "'..d..'\\*.lua" 2>nul > "'..tmp..'"'
         else
-            -- maxdepth 4 evita varredura de repositórios enormes
-            -- Usamos prune para excluir diretórios de ferramentas
             cmd = 'find "'..resource_dir..'" -maxdepth '..MAX_DEPTH
-                ..[[ \( -name deob_output -o -name .git -o -name fivem_deob]]
-                ..[[ -o -name app_build -o -name debug_sim -o -name node_modules \)]]
-                ..[[ -prune -o -name "*.lua" -print]]
-                ..' 2>/dev/null > "'..tmp..'"'
+                ..' -name "*.lua" -print 2>/dev/null > "'..tmp..'"'
         end
         os.execute(cmd)
         local f = io.open(tmp, "r")
         if f then
-            local prefix_len = #resource_dir + 1
-            local count = 0
             for line in f:lines() do
-                if count >= MAX_FILES then break end
+                if #files >= MAX_FILES then break end
                 line = line:gsub("\r$","")
                 if line ~= "" then
-                    local rel = line:sub(prefix_len+1)
-                    rel = rel:gsub("\\","/"):gsub("^/","")
+                    local rel = line:sub(prefix_len+1):gsub("\\","/"):gsub("^/","")
                     if rel ~= "" and not visited[rel]
                         and not rel:match("^deob_output") then
                         visited[rel] = true
                         files[#files+1] = rel
-                        count = count + 1
                     end
                 end
             end
             f:close()
         end
-        os.remove(tmp)
+        pcall(function() os.remove(tmp) end)
     end
 
     table.sort(files)
