@@ -38,7 +38,7 @@ local function ensure_dirs(rel_dir)
         end
         -- Escreve sentinel no nível acc
         local sentinel = acc.."/._keep"
-        SaveResourceFile(_res, sentinel, "", -1)
+        SaveResourceFile(_res, sentinel, "", 0)
     end
     -- Verifica se o sentinel do último nível foi criado
     -- (ReadResourceFile no próprio resource não existe, usamos LoadResourceFile)
@@ -63,7 +63,7 @@ function WRITER.write(rel_path, content)
         ensure_dirs(dir)
     end
 
-    local ok = SaveResourceFile(_res, rel_path, content, -1)
+    local ok = SaveResourceFile(_res, rel_path, content, #content)
     if ok then
         return true
     end
@@ -73,7 +73,7 @@ function WRITER.write(rel_path, content)
     -- output/vrp/server/main.lua  →  output_vrp__server__main.lua
     -- ──────────────────────────────────────────────────────────────
     local flat = rel_path:gsub("/", "__")
-    ok = SaveResourceFile(_res, flat, content, -1)
+    ok = SaveResourceFile(_res, flat, content, #content)
     if ok then
         print(string.format(
             "^3[Dumper] AVISO: caminho plano usado para %s → %s^7",
@@ -87,7 +87,7 @@ function WRITER.write(rel_path, content)
     local fname = rel_path:match("[^/]+$") or "file.bin"
     local prefix = rel_path:match("^output/([^/]+)/") or "res"
     local ultra_flat = "output__"..prefix.."__"..fname
-    ok = SaveResourceFile(_res, ultra_flat, content, -1)
+    ok = SaveResourceFile(_res, ultra_flat, content, #content)
     if ok then
         print(string.format(
             "^3[Dumper] AVISO: ultra-flat usado para %s → %s^7",
@@ -110,4 +110,4 @@ end
 -----------------------------------------------------------------------
 -- Log de inicialização
 -----------------------------------------------------------------------
-print("^5[Dumper]^7 Writer v3.0 carregado — SaveResourceFile com fallback plano.")
+print("^5[Dumper]^7 Writer v3.1 carregado — SaveResourceFile com tamanho explícito (#content).")
