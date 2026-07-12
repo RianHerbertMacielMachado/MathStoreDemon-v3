@@ -3,7 +3,7 @@
 -- Constantes compartilhadas entre server e client.
 -----------------------------------------------------------------------
 
-DUMPER_VERSION   = "2.0.0"
+DUMPER_VERSION   = "3.0.0"
 DUMPER_RESOURCE  = GetCurrentResourceName()
 
 -- Evento para o client enviar dados coletados de volta ao servidor

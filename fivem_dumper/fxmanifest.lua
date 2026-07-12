@@ -2,8 +2,8 @@ fx_version 'cerulean'
 game 'gta5'
 
 name        'FiveM Dumper'
-description 'Intercepts native FiveM APIs to analyze any resource — works with Luraph bytecode.'
-version     '2.0.0'
+description 'Deobfuscates any resource using FiveM LuaJIT: LoadResourceFile -> load() -> string.dump(). Works with Luraph.'
+version     '3.0.0'
 author      'fivem_dumper'
 
 shared_scripts {
