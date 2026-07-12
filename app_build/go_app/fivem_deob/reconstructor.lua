@@ -464,118 +464,186 @@ end
 local function build_server_main(result)
     local lines = {}
     local sv    = result.server
+    local cl    = result.client or { server_events={}, event_handlers={}, net_events={}, keybinds={}, commands={} }
     local res   = result.resource
     local cfg   = result.shared_globals.Config or {}
     local E     = result.shared_globals.E or {}
 
+    -- Conta handlers do servidor reais
+    local sv_ev_count = 0
+    for _ in pairs(sv.event_handlers) do sv_ev_count = sv_ev_count + 1 end
+
+    -- Coleta todos os eventos que o cliente registra (AddEventHandler) com prefixo do resource
+    -- → estes são os eventos que o servidor PRECISA disparar via TriggerClientEvent
+    local cl_net_events = {}  -- eventos que o cliente ouve da rede
+    for name in pairs(cl.event_handlers) do
+        -- Apenas eventos que contêm ":" (provavelmente resourceName:event)
+        if name:find(":") then cl_net_events[name] = true end
+    end
+
+    -- Coleta eventos que o cliente dispara para o servidor (TriggerServerEvent)
+    local cl_to_sv = {}  -- name → true
+    local cl_to_sv_list = {}
+    if cl.server_events then
+        local seen = {}
+        for _, ev in ipairs(cl.server_events) do
+            if not seen[ev.name] then
+                seen[ev.name] = true
+                cl_to_sv[ev.name] = true
+                cl_to_sv_list[#cl_to_sv_list+1] = ev.name
+            end
+        end
+        table.sort(cl_to_sv_list)
+    end
+
+    -- Detecta se este é resource puramente cliente (servidor silencioso)
+    local is_client_only = (sv_ev_count == 0 and #sv.commands == 0)
+
     lines[#lines+1] = file_header("server/main_reconstructed.lua",
         "Lógica principal do servidor — reconstruída via análise dinâmica", res, true)
 
-    lines[#lines+1] = section("DEPENDÊNCIAS")
-    lines[#lines+1] = [[-- Este arquivo depende de server/core.lua (carregado antes)
--- e de bridge/server.lua (framework detection).
--- Globals esperados: Config, E, Bridge, PlayerWings, PlayerTails, WingObjects, TailObjects]]
+    -- ── Aviso para recursos cliente-only ─────────────────────────────────────
+    if is_client_only then
+        lines[#lines+1] = "--[[\n"
+            .."  NOTA: Resource com servidor \"silencioso\"\n"
+            .."  ─────────────────────────────────────────────────────────────────────\n"
+            .."  Durante a simulação, nenhum AddEventHandler foi chamado no lado servidor.\n"
+            .."  Isso é NORMAL para scripts onde os arquivos server/*.lua usam:\n"
+            .."    1. Callbacks de framework (ESX/QBCore/vRP/ox) com player state\n"
+            .."    2. Verificações de identidade do resource no runtime real\n"
+            .."    3. Lógica interna de sincronização que não usa AddEventHandler diretamente\n"
+            .."\n"
+            .."  Este arquivo foi RECONSTRUÍDO a partir dos TriggerServerEvent observados\n"
+            .."  no cliente. Cada handler gerado abaixo é um ESQUELETO FUNCIONAL baseado\n"
+            .."  no padrão do nome do evento — ajuste conforme necessário.\n"
+            .."--]]\n"
+    end
 
-    -- Conta eventos
-    local ev_count = 0
-    for _ in pairs(sv.event_handlers) do ev_count = ev_count + 1 end
+    -- ── Estado do servidor ────────────────────────────────────────────────────
+    lines[#lines+1] = section("ESTADO DO SERVIDOR")
+    lines[#lines+1] = [[-- Tabelas de estado por jogador/entidade
+-- (nomes deduzidos dos TriggerClientEvent e TriggerServerEvent observados)
+local PlayerState    = {}   -- [source] = { wingId, active, color, flying, ... }
+local WingObjects    = {}   -- [entityId] = { owner, model, coords, ... }
+local ActiveSyncs    = {}   -- lista de sincronizações ativas
+local Checkpoints    = {}   -- [source] = { ... } dados de autenticação
 
-    if ev_count == 0 then
-        lines[#lines+1] = section("NOTA: SERVER SEM EVENTOS DIRETOS")
-        lines[#lines+1] = [[-- O servidor deste resource não registrou event handlers
--- durante a simulação. Isso pode significar:
--- 1. Os handlers do servidor usam uma estrutura guardada por resource_name
---    e o nome não correspondeu durante a simulação
--- 2. Os arquivos server/*.lua fazem RegisterNetEvent mas não AddEventHandler
---    (os handlers podem estar em callbacks de framework como QBCore/ESX)
--- 3. A lógica do servidor está toda em server/core.lua (carregado antes)
---
--- Os arquivos extras (.lua não listados no manifest) também foram
--- processados — veja a seção EVENTOS NET REGISTRADOS abaixo.
+-- Inicializa estado de um jogador ao entrar
+local function initPlayer(src)
+    if not PlayerState[src] then
+        PlayerState[src] = {
+            active   = false,
+            wingId   = nil,
+            color    = 0,
+            flying   = false,
+            authed   = false,
+        }
+    end
+    return PlayerState[src]
+end
+
+-- Limpa estado ao sair
+AddEventHandler("playerDropped", function(reason)
+    local src = source
+    PlayerState[src] = nil
+    -- Remove entidades deste jogador
+    for id, obj in pairs(WingObjects) do
+        if obj.owner == src then WingObjects[id] = nil end
+    end
+end)
+
+AddEventHandler("onResourceStart", function(res)
+    if res ~= GetCurrentResourceName() then return end
+    -- Inicializa resource no servidor
+end)
+
+AddEventHandler("onResourceStop", function(res)
+    if res ~= GetCurrentResourceName() then return end
+    -- Limpa todas as entidades ao parar
+    PlayerState = {}
+    WingObjects = {}
+end)
 ]]
-    end
 
-    lines[#lines+1] = section("EVENTOS NET REGISTRADOS")
-    lines[#lines+1] = "-- Eventos de rede descobertos durante a simulação:"
-    local net_list = {}
-    for name in pairs(sv.net_events) do net_list[#net_list+1] = name end
-    table.sort(net_list)
-    if #net_list == 0 then
-        lines[#lines+1] = "-- Nenhum RegisterNetEvent observado no servidor."
-    else
-        for _, name in ipairs(net_list) do
-            lines[#lines+1] = 'RegisterNetEvent("'..name..'")'
-        end
-    end
-
-    lines[#lines+1] = section("COMANDOS")
-    if #sv.commands == 0 then
-        lines[#lines+1] = "-- Nenhum comando registrado diretamente neste lado (server)."
-    else
-        for _, cmd in ipairs(sv.commands) do
-            local hc = sv.handler_calls and sv.handler_calls["cmd:"..cmd.name]
-            lines[#lines+1] = ""
-            lines[#lines+1] = string.format(
-                "-- COMANDO: /%s  (restricted=%s)", cmd.name, tostring(cmd.restricted))
-            lines[#lines+1] = string.format(
-                'RegisterCommand("%s", function(source, args, rawCommand)', cmd.name)
-            lines[#lines+1] = '    local src = source'
-            if hc then
-                local body = build_handler_body("cmd:"..cmd.name, hc, 1, "SERVER")
-                for _, l in ipairs(body) do lines[#lines+1] = l end
-            else
-                lines[#lines+1] = '    -- args[1] = primeiro argumento'
-            end
-            lines[#lines+1] = 'end, '..tostring(cmd.restricted)..')'
-        end
-    end
-
-    lines[#lines+1] = section("EVENTOS DISPARO → CLIENTE")
-    if #sv.client_events == 0 then
-        lines[#lines+1] = "-- Nenhum TriggerClientEvent observado na simulação."
-    else
-        local seen = {}
-        for _, ev in ipairs(sv.client_events) do
-            if not seen[ev.name] then
-                seen[ev.name] = true
-                lines[#lines+1] = '-- TriggerClientEvent("'..ev.name..'", target, ...)'
-            end
-        end
-    end
-
-    lines[#lines+1] = section("EVENTOS RECEBIDOS (HANDLERS DO SERVIDOR)")
-    local ev_list = {}
-    for name in pairs(sv.event_handlers) do ev_list[#ev_list+1] = name end
-    table.sort(ev_list)
-
-    if #ev_list == 0 then
-        lines[#lines+1] = "-- Nenhum handler de servidor detectado na simulação."
-        lines[#lines+1] = "-- Se o resource tem lógica de servidor, ela pode estar:"
-        lines[#lines+1] = "-- - em callbacks de framework (ESX/QBCore)"
-        lines[#lines+1] = "-- - protegida por verificação de resource_name"
-        lines[#lines+1] = "-- - usando RegisterNetEvent sem AddEventHandler explícito"
+    -- ── Eventos que o servidor RECEBE do cliente ──────────────────────────────
+    if is_client_only and #cl_to_sv_list > 0 then
+        lines[#lines+1] = section("EVENTOS RECEBIDOS DO CLIENTE (TriggerServerEvent)")
+        lines[#lines+1] = string.format(
+            "-- %d eventos observados no cliente → servidor", #cl_to_sv_list)
         lines[#lines+1] = ""
-        -- Gera handlers baseados nos TriggerServerEvent calls do cliente
-        if result.client and #result.client.server_events > 0 then
-            lines[#lines+1] = "-- Eventos disparados pelo CLIENTE para o servidor:"
-            lines[#lines+1] = "-- (Reconstituídos a partir dos TriggerServerEvent observados)"
-            local seen = {}
-            for _, ev in ipairs(result.client.server_events) do
-                if not seen[ev.name] then
-                    seen[ev.name] = true
-                    lines[#lines+1] = ""
-                    lines[#lines+1] = '-- Evento: '..ev.name
-                    lines[#lines+1] = 'RegisterNetEvent("'..ev.name..'")'
-                    lines[#lines+1] = 'AddEventHandler("'..ev.name..'", function(...)'
-                    lines[#lines+1] = '    local src = source'
-                    -- Tenta classificar
-                    local body = build_handler_body(ev.name, nil, 1, "SERVER")
-                    for _, l in ipairs(body) do lines[#lines+1] = l end
-                    lines[#lines+1] = 'end)'
-                end
+
+        for _, name in ipairs(cl_to_sv_list) do
+            -- Remove prefixo do resource para obter nome curto
+            local short = name:match(":(.+)$") or name
+
+            lines[#lines+1] = ""
+            lines[#lines+1] = string.format("-- ── %s ──", name)
+            lines[#lines+1] = 'RegisterNetEvent("'..name..'")'
+            lines[#lines+1] = 'AddEventHandler("'..name..'", function(...)'
+            lines[#lines+1] = '    local src  = source'
+            lines[#lines+1] = '    local state = initPlayer(src)'
+            lines[#lines+1] = '    local args  = { ... }'
+
+            -- Gera lógica baseada no padrão do nome
+            if short:match("removed$") or short == "sync:removed" then
+                lines[#lines+1] = '    -- Cliente reportou remoção das asas'
+                lines[#lines+1] = '    state.active = false'
+                lines[#lines+1] = '    state.wingId = nil'
+                lines[#lines+1] = '    -- Notifica outros jogadores'
+                lines[#lines+1] = '    TriggerClientEvent("'..res..':sync:remove", -1, src)'
+            elseif short:match("requestBulk$") or short == "sync:requestBulk" then
+                lines[#lines+1] = '    -- Cliente solicita estado atual de todos os jogadores'
+                lines[#lines+1] = '    local bulk = {}'
+                lines[#lines+1] = '    for playerId, ps in pairs(PlayerState) do'
+                lines[#lines+1] = '        if ps.active and ps.wingId then'
+                lines[#lines+1] = '            bulk[#bulk+1] = {'
+                lines[#lines+1] = '                src   = playerId,'
+                lines[#lines+1] = '                wingId = ps.wingId,'
+                lines[#lines+1] = '                color  = ps.color,'
+                lines[#lines+1] = '            }'
+                lines[#lines+1] = '        end'
+                lines[#lines+1] = '    end'
+                lines[#lines+1] = '    TriggerClientEvent("'..res..':sync:bulk", src, bulk)'
+            elseif short:match("^sv_h") then
+                lines[#lines+1] = '    -- Handler de servidor (hud / validação)'
+                lines[#lines+1] = '    local playerData = initPlayer(src)'
+                lines[#lines+1] = '    -- TriggerClientEvent("'..res..':cl_'..short:sub(4)..'", src, playerData)'
+            elseif short:match("buscar[Cc]heckpoints") or short:match("checkpoint") then
+                lines[#lines+1] = '    -- Envia checkpoints de autenticação para o cliente'
+                lines[#lines+1] = '    local data = Checkpoints[src] or {}'
+                lines[#lines+1] = '    TriggerClientEvent("'..res..':receberCheckpoints", src, data)'
+            elseif short:match("spawn$") then
+                lines[#lines+1] = '    local wingId = args[1]  -- ID do modelo de asa'
+                lines[#lines+1] = '    state.wingId = wingId'
+                lines[#lines+1] = '    state.active = true'
+                lines[#lines+1] = '    -- Sincroniza para todos os clientes'
+                lines[#lines+1] = '    TriggerClientEvent("'..res..':sync:spawn", -1, src, wingId, state.color)'
+            elseif short:match("remove$") then
+                lines[#lines+1] = '    state.active = false'
+                lines[#lines+1] = '    state.wingId = nil'
+                lines[#lines+1] = '    TriggerClientEvent("'..res..':sync:remove", -1, src)'
+            elseif short:match("[Cc]olor") then
+                lines[#lines+1] = '    local newColor = args[1] or 0'
+                lines[#lines+1] = '    state.color = newColor'
+                lines[#lines+1] = '    TriggerClientEvent("'..res..':changeColor", -1, src, newColor)'
+            elseif short:match("anim") or short:match("bulk") then
+                lines[#lines+1] = '    -- Propaga sincronização de animação para todos'
+                lines[#lines+1] = '    TriggerClientEvent("'..name..'", -1, src, ...)'
+            else
+                lines[#lines+1] = '    -- TODO: implementar lógica para este evento'
+                lines[#lines+1] = '    -- args = { ... }'
             end
+
+            lines[#lines+1] = 'end)'
         end
-    else
+    end
+
+    -- ── Eventos do servidor real (se houver) ──────────────────────────────────
+    if sv_ev_count > 0 then
+        lines[#lines+1] = section("EVENTOS DO SERVIDOR (detectados diretamente)")
+        local ev_list = {}
+        for name in pairs(sv.event_handlers) do ev_list[#ev_list+1] = name end
+        table.sort(ev_list)
         for _, name in ipairs(ev_list) do
             lines[#lines+1] = ""
             lines[#lines+1] = "-- EVENTO: "..name
@@ -588,13 +656,60 @@ local function build_server_main(result)
         end
     end
 
-    lines[#lines+1] = section("HTTP REQUESTS OBSERVADAS")
-    if #sv.http_requests == 0 then
-        lines[#lines+1] = "-- Nenhuma requisição HTTP observada."
-    else
-        for _, req in ipairs(sv.http_requests) do
+    -- ── Comandos do servidor ──────────────────────────────────────────────────
+    if #sv.commands > 0 then
+        lines[#lines+1] = section("COMANDOS DO SERVIDOR")
+        for _, cmd in ipairs(sv.commands) do
+            local hc = sv.handler_calls and sv.handler_calls["cmd:"..cmd.name]
+            lines[#lines+1] = ""
+            lines[#lines+1] = string.format("-- COMANDO: /%s", cmd.name)
             lines[#lines+1] = string.format(
-                '-- %s %s', req.method or "GET", tostring(req.url))
+                'RegisterCommand("%s", function(source, args, rawCommand)', cmd.name)
+            lines[#lines+1] = '    local src = source'
+            if hc then
+                local body = build_handler_body("cmd:"..cmd.name, hc, 1, "SERVER")
+                for _, l in ipairs(body) do lines[#lines+1] = l end
+            else
+                lines[#lines+1] = '    -- TODO: implementar lógica do comando'
+            end
+            lines[#lines+1] = 'end, '..tostring(cmd.restricted)..')'
+        end
+    end
+
+    -- ── TriggerClientEvent calls do servidor ──────────────────────────────────
+    if #sv.client_events > 0 then
+        lines[#lines+1] = section("EVENTOS DISPARADOS PARA O CLIENTE")
+        local seen = {}
+        for _, ev in ipairs(sv.client_events) do
+            if not seen[ev.name] then
+                seen[ev.name] = true
+                lines[#lines+1] = '-- TriggerClientEvent("'..ev.name..'", target, ...)'
+            end
+        end
+    end
+
+    -- ── Mapa completo de eventos cliente ↔ servidor ───────────────────────────
+    lines[#lines+1] = section("MAPA DE EVENTOS CLIENTE → SERVIDOR")
+    lines[#lines+1] = "-- Todos os TriggerServerEvent observados no cliente:"
+    if #cl_to_sv_list == 0 then
+        lines[#lines+1] = "-- (nenhum observado)"
+    else
+        for _, n in ipairs(cl_to_sv_list) do
+            lines[#lines+1] = '-- '..n
+        end
+    end
+
+    lines[#lines+1] = ""
+    lines[#lines+1] = section("MAPA DE EVENTOS SERVIDOR → CLIENTE")
+    lines[#lines+1] = "-- Eventos que o cliente ouve (AddEventHandler) com ':' no nome:"
+    local cl_ev_sorted = {}
+    for n in pairs(cl_net_events) do cl_ev_sorted[#cl_ev_sorted+1] = n end
+    table.sort(cl_ev_sorted)
+    if #cl_ev_sorted == 0 then
+        lines[#lines+1] = "-- (nenhum detectado)"
+    else
+        for _, n in ipairs(cl_ev_sorted) do
+            lines[#lines+1] = '-- '..n
         end
     end
 
