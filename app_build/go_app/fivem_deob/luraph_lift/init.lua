@@ -56,25 +56,30 @@ function M.deobfuscate(input_path, output_path, opts)
     result.error = "Not a Luraph-obfuscated file (no VM dispatcher found)"
     return result
   end
-  log("Confirmed: Luraph obfuscation detected (%d bytes)", #src)
+  local luraph_ver = parser.luraph_version(src)
+  log("Confirmed: Luraph obfuscation detected (%d bytes, version=%s)", #src, tostring(luraph_ver))
 
   -- ── Step 2: Extract executor body for opcode identification ───────────────
+  -- Only v1 ("while true do local Z=...") has a parseable dispatch tree.
+  -- v2 ("repeat local J=Z[V]") uses a binary if-tree; opcode_id.lua handles it separately.
   log("Extracting executor body...")
   local exec_body = parser.extract_executor_body(src)
   if not exec_body then
-    result.error = "Could not locate Luraph executor (local Z=(V[j]) not found)"
-    return result
+    -- v2 files often have no "while true do local Z=" pattern.
+    -- We skip static opcode identification and go straight to runtime capture.
+    log("No executor body found (v2 variant) -- skipping static opcode identification")
+  else
+    log("Executor body: %d chars", #exec_body)
   end
-  log("Executor body: %d chars", #exec_body)
 
-  -- ── Step 3: Identify opcodes ──────────────────────────────────────────────
+  -- ── Step 3: Identify opcodes from dispatch tree (v1 only) ─────────────────
   log("Identifying opcodes from dispatch tree...")
-  local opmap, namemap = opcode_id.identify(exec_body)
+  local opmap, namemap = opcode_id.identify(exec_body or "")
   local n_ops = 0
   for _ in pairs(opmap) do n_ops = n_ops + 1 end
   log("Identified %d opcodes", n_ops)
 
-  if opts.verbose then
+  if opts.verbose and n_ops > 0 then
     io.stderr:write("Opcode map:\n"..opcode_id.dump(opmap).."\n")
   end
 
@@ -85,11 +90,12 @@ function M.deobfuscate(input_path, output_path, opts)
   if protos and #protos > 0 then
     log("Captured %d prototype(s) via runtime interception", #protos)
   else
-    log("Runtime interception failed (%s), trying static extraction...", tostring(run_err))
-    -- Fall back: at least we have the opcode map and a partial view
+    -- 0 protos is expected for files with anti-tamper (bones.lua) or v2 files
+    -- that call FiveM natives the sandbox can't satisfy (verificar.lua).
+    -- Don't abort -- we still produce a useful partial output with the opcode map.
+    local note = tostring(run_err)
+    log("Runtime capture: 0 prototypes (%s) -- generating partial output", note)
     protos = {}
-    result.error = "Runtime capture failed: "..tostring(run_err)
-    -- We still generate partial output from what we know
   end
 
   -- ── Step 5: Generate readable Lua ────────────────────────────────────────
@@ -100,6 +106,17 @@ function M.deobfuscate(input_path, output_path, opts)
   if opts.stats and #protos > 0 then
     local stats = codegen.stat_report(protos, opmap)
     output = output .."\n\n--[[\n"..stats.."\n]]\n"
+  end
+
+  -- Prepend a header note if no runtime capture happened
+  if #protos == 0 then
+    local ver_str = tostring(luraph_ver or "v2")
+    output = "--[[ LURAPH "..ver_str..": partial output (0 VM prototypes captured at runtime)\n"
+      .."--   File: "..input_path.."\n"
+      .."--   Cause: anti-tamper triggered OR this "..ver_str.." file requires FiveM natives.\n"
+      .."--   The opcode map (v1 only) and executor structure are extracted below.\n"
+      .."--   For full deobfuscation of v2 files, run on a real FiveM server.\n"
+      .."]]".."\n\n" .. output
   end
 
   -- Always append the opcode map as a comment
@@ -131,11 +148,26 @@ end
 -- CLI ENTRY POINT
 -- ============================================================
 
--- Detect if running as main script
-local is_main = (debug.getinfo(1, "S").source or ""):find("init.lua$") ~= nil
-  and arg ~= nil
+-- Detect if running as main script (NOT when required as a module).
+--
+-- ROOT CAUSE OF BUG: when deob.lua calls require("fivem_deob.luraph_lift"),
+-- Lua loads this file but arg[0] = "deob.lua" and arg[1] = resource_dir.
+-- The old check (source:find("init.lua$")) matched because debug.getinfo
+-- returns THIS file's path — even when loaded as a module, not as main.
+--
+-- FIX: check arg[0] (the ACTUAL entry script). If it ends in "deob.lua"
+-- or doesn't contain "init.lua" we are NOT the main script.
+-- Also require arg[1] to look like a .lua file (ends in .lua), not a
+-- directory path or a flag like "--output".
+local _arg0 = arg and arg[0] and tostring(arg[0]):gsub("\\", "/") or ""
+local is_main = arg ~= nil
+  and _arg0:find("init%.lua$") ~= nil        -- arg[0] must end in init.lua
+  and not _arg0:find("deob%.lua$")            -- NOT deob.lua running us as module
+  and arg[1] ~= nil                           -- must have an input argument
+  and arg[1]:find("%.lua$") ~= nil            -- arg[1] must be a .lua file path
+  and arg[1]:sub(1, 2) ~= "--"               -- not a flag
 
-if is_main and arg and arg[1] then
+if is_main then
   local input  = arg[1]
   local output = arg[2] or (input:gsub("%.lua$", "").."_deob.lua")
 
