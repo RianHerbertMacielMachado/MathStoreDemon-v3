@@ -3,14 +3,54 @@
 -- Reconstrói arquivos Lua LEGÍVEIS a partir dos dados extraídos
 -- pelo extractor. Cria:
 --   output/server/main_reconstructed.lua
---   output/server/core_reconstructed.lua
 --   output/client/main_reconstructed.lua
---   output/client/events_reconstructed.lua
 --   output/shared/events_map.lua
+--   output/shared/config_extracted.lua
 --   output/ANALYSIS_REPORT.md
 -----------------------------------------------------------------------
 
 local REC = {}
+
+-- ── Detecta OS ──────────────────────────────────────────────────────
+local IS_WINDOWS = package.config:sub(1,1) == '\\'
+
+-- ── mkdir portável (sem -p) ─────────────────────────────────────────
+local function mkdir(dir)
+    if IS_WINDOWS then
+        local d = dir:gsub('/', '\\')
+        os.execute('mkdir "'..d..'" 2>nul')
+    else
+        os.execute('mkdir -p "'..dir..'"')
+    end
+end
+
+-- ── Cria diretório e todos os pais de forma portável ────────────────
+local function mkdirp(dir)
+    -- Normaliza separadores
+    local sep = IS_WINDOWS and '\\' or '/'
+    local norm = dir:gsub('\\', '/'):gsub('/$', '')
+    -- Divide o path
+    local parts = {}
+    for p in norm:gmatch('[^/]+') do parts[#parts+1] = p end
+    -- Se começa com '/' (Unix raiz) ou letra de drive (Windows)
+    local prefix = ""
+    if norm:sub(1,1) == "/" then
+        prefix = "/"
+    elseif norm:match("^%a:/") then
+        prefix = norm:match("^%a:/")
+    end
+    local current = prefix
+    for _, part in ipairs(parts) do
+        if current == "" then
+            current = part
+        elseif current:sub(-1) == "/" or current:sub(-1) == "\\" then
+            current = current..part
+        else
+            current = current.."/"..part
+        end
+        mkdir(current)
+    end
+end
 
 -- ── Helpers de formatação ────────────────────────────────────────────
 local function indent(n) return string.rep("    ", n) end
@@ -37,7 +77,6 @@ local function lua_val(v, depth, seen)
     if t == "boolean" then return tostring(v) end
     if t == "number"  then return tostring(v) end
     if t == "string"  then
-        -- escapa corretamente
         local s = v:gsub("\\","\\\\"):gsub('"','\\"'):gsub("\n","\\n"):gsub("\r","\\r")
         return '"'..s..'"'
     end
@@ -91,6 +130,288 @@ local function file_header(filename, description, resource, auto)
 end
 
 -- ════════════════════════════════════════════════════════════════════
+-- Gera CORPO REAL de um handler a partir das chamadas observadas
+-- ════════════════════════════════════════════════════════════════════
+local function build_handler_body(event_name, hc, indent_level, side)
+    if not hc then
+        return { indent(indent_level).."-- Handler não disparado na simulação" }
+    end
+
+    local lines = {}
+    local ind   = indent(indent_level)
+    local ind2  = indent(indent_level + 1)
+
+    -- Detecta tipo de evento pelo nome
+    local is_spawn  = event_name:match(":spawn$") or event_name:match("^spawn$")
+    local is_remove = event_name:match(":remove$") or event_name:match("^remove$")
+    local is_anim   = event_name:match(":abrir$") or event_name:match(":fechar$")
+                   or event_name:match(":bater$")  or event_name:match(":enrolar$")
+                   or event_name:match(":reta$")
+    local is_color  = event_name:match(":changeColor$") or event_name:match("color")
+    local is_sync   = event_name:match("^sync:") or event_name:match(":sync:")
+    local is_flight = event_name:match("^flight:") or event_name:match(":flight:")
+    local is_auth   = event_name:match("auth") or event_name:match("autorizar")
+    local is_tail   = event_name:match("^tail:")
+    local is_server_event = (side == "SERVER")
+
+    -- ── Parâmetros típicos de servidor ──────────────────────────────
+    if is_server_event then
+        lines[#lines+1] = ind.."local src = source"
+    end
+
+    -- ── Animações observadas ─────────────────────────────────────────
+    if hc.anims and #hc.anims > 0 then
+        for _, dict in ipairs(hc.anims) do
+            lines[#lines+1] = ""
+            lines[#lines+1] = ind.."-- Carrega dicionário de animação"
+            lines[#lines+1] = ind..'if not HasAnimDictLoaded("'..dict..'") then'
+            lines[#lines+1] = ind2..'RequestAnimDict("'..dict..'")'
+            lines[#lines+1] = ind2..'while not HasAnimDictLoaded("'..dict..'") do Wait(10) end'
+            lines[#lines+1] = ind..'end'
+        end
+    end
+
+    -- ── Clips de animação observados ────────────────────────────────
+    if hc.anims_played and #hc.anims_played > 0 then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- Animações reproduzidas neste handler:"
+        local seen_anim = {}
+        for _, play in ipairs(hc.anims_played) do
+            local key = (play.dict or "?")..":"..(play.clip or "?")
+            if not seen_anim[key] then
+                seen_anim[key] = true
+                local ped_ref = (side == "SERVER") and "GetPlayerPed(src)" or "PlayerPedId()"
+                lines[#lines+1] = string.format(
+                    ind..'TaskPlayAnim(%s, "%s", "%s", 8.0, -8.0, -1, %d, 0, false, false, false)',
+                    ped_ref,
+                    tostring(play.dict), tostring(play.clip),
+                    play.flag or 0)
+            end
+        end
+    end
+
+    -- ── Criação de entidades ─────────────────────────────────────────
+    if (hc.entities_created or 0) > 0 then
+        if is_spawn then
+            lines[#lines+1] = ""
+            lines[#lines+1] = ind.."-- Cria entidade/objeto (spawn detectado na simulação)"
+            lines[#lines+1] = ind.."-- Substitua 'model' pelo modelo correto"
+            lines[#lines+1] = ind..'local model = GetHashKey("prop_example")'
+            lines[#lines+1] = ind..'RequestModel(model)'
+            lines[#lines+1] = ind..'while not HasModelLoaded(model) do Wait(10) end'
+            lines[#lines+1] = ind..'local coords = GetEntityCoords(PlayerPedId())'
+            lines[#lines+1] = ind..'local entity = CreateObject(model, coords.x, coords.y, coords.z, true, true, false)'
+            if hc.attach_calls and #hc.attach_calls > 0 then
+                local a = hc.attach_calls[1]
+                lines[#lines+1] = string.format(
+                    ind..'AttachEntityToEntity(entity, PlayerPedId(), %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, false, false, false, false, 2, true)',
+                    a.bone or 0,
+                    (a.offset and a.offset[1]) or 0.0,
+                    (a.offset and a.offset[2]) or 0.0,
+                    (a.offset and a.offset[3]) or 0.0,
+                    (a.rot   and a.rot[1])    or 0.0,
+                    (a.rot   and a.rot[2])    or 0.0,
+                    (a.rot   and a.rot[3])    or 0.0)
+            end
+            lines[#lines+1] = ind..'SetModelAsNoLongerNeeded(model)'
+        elseif is_remove then
+            lines[#lines+1] = ""
+            lines[#lines+1] = ind.."-- Remove entidade existente"
+            lines[#lines+1] = ind..'if DoesEntityExist(entity) then'
+            lines[#lines+1] = ind2..'DetachEntity(entity, true, false)'
+            lines[#lines+1] = ind2..'DeleteEntity(entity)'
+            lines[#lines+1] = ind2..'entity = nil'
+            lines[#lines+1] = ind..'end'
+        end
+    elseif (hc.entities_deleted or 0) > 0 then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- Deleta entidade (observado na simulação)"
+        lines[#lines+1] = ind..'if DoesEntityExist(entity) then'
+        lines[#lines+1] = ind2..'DeleteEntity(entity)'
+        lines[#lines+1] = ind2..'entity = nil'
+        lines[#lines+1] = ind..'end'
+    end
+
+    -- ── Attach calls observadas ──────────────────────────────────────
+    if hc.attach_calls and #hc.attach_calls > 0 and not is_spawn then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- Attach entity observado:"
+        for _, a in ipairs(hc.attach_calls) do
+            lines[#lines+1] = string.format(
+                ind..'-- AttachEntityToEntity(entity, PlayerPedId(), %d, %.4f, %.4f, %.4f, %.4f, %.4f, %.4f, ...)',
+                a.bone or 0,
+                (a.offset and a.offset[1]) or 0.0,
+                (a.offset and a.offset[2]) or 0.0,
+                (a.offset and a.offset[3]) or 0.0,
+                (a.rot   and a.rot[1])    or 0.0,
+                (a.rot   and a.rot[2])    or 0.0,
+                (a.rot   and a.rot[3])    or 0.0)
+        end
+    end
+
+    -- ── TriggerServerEvent calls ─────────────────────────────────────
+    if hc.triggers_server and #hc.triggers_server > 0 then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- Dispara evento(s) no servidor:"
+        local seen_tsv = {}
+        for _, t in ipairs(hc.triggers_server) do
+            if not seen_tsv[t.name] then
+                seen_tsv[t.name] = true
+                -- Tenta reconstituir args
+                local args_str = ""
+                if t.args and #t.args > 0 then
+                    local parts = {}
+                    for _, a in ipairs(t.args) do
+                        if type(a) == "string" then
+                            parts[#parts+1] = '"'..a..'"'
+                        elseif type(a) == "number" then
+                            parts[#parts+1] = tostring(a)
+                        elseif type(a) == "boolean" then
+                            parts[#parts+1] = tostring(a)
+                        else
+                            parts[#parts+1] = "..."
+                        end
+                    end
+                    args_str = ", "..table.concat(parts, ", ")
+                end
+                lines[#lines+1] = ind..'TriggerServerEvent("'..t.name..'"'..args_str..')'
+            end
+        end
+    end
+
+    -- ── TriggerClientEvent calls (servidor→cliente) ─────────────────
+    if hc.triggers_client and #hc.triggers_client > 0 then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- Dispara evento(s) no cliente:"
+        local seen_tcl = {}
+        for _, t in ipairs(hc.triggers_client) do
+            if not seen_tcl[t.name] then
+                seen_tcl[t.name] = true
+                local tgt = t.target or "src"
+                if tgt == "1" or tgt == "ALL" then
+                    tgt = tgt == "ALL" and "-1" or "src"
+                end
+                lines[#lines+1] = ind..'TriggerClientEvent("'..t.name..'", '..tgt..')'
+            end
+        end
+    end
+
+    -- ── SendNuiMessage ───────────────────────────────────────────────
+    if hc.nui_messages and #hc.nui_messages > 0 then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- Envia mensagem NUI:"
+        for _, msg in ipairs(hc.nui_messages) do
+            -- Trunca msg se muito longa
+            local m = msg
+            if #m > 120 then m = m:sub(1,120).."..." end
+            lines[#lines+1] = ind.."-- SendNuiMessage(json.encode({...}))"
+            lines[#lines+1] = ind.."-- Payload observado: "..m
+            break  -- só o primeiro para não poluir
+        end
+        lines[#lines+1] = ind.."SendNuiMessage(json.encode({action = \"...\", data = {}}))"
+    end
+
+    -- ── HTTP calls ───────────────────────────────────────────────────
+    if hc.http_calls and #hc.http_calls > 0 then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- HTTP request observada:"
+        for _, req in ipairs(hc.http_calls) do
+            lines[#lines+1] = string.format(
+                ind..'PerformHttpRequest("%s", function(status, body, headers)',
+                tostring(req.url))
+            lines[#lines+1] = ind2..'local data = json.decode(body)'
+            lines[#lines+1] = ind2..'if status == 200 and data then'
+            lines[#lines+1] = ind2..'    -- processar resposta'
+            lines[#lines+1] = ind2..'end'
+            lines[#lines+1] = ind..string.format('end, "%s")', req.method or "GET")
+        end
+    end
+
+    -- ── Natives observadas (as mais importantes) ─────────────────────
+    if hc.natives and #hc.natives > 0 then
+        -- Filtra nativas mais relevantes para mostrar como código
+        local important = {
+            SetEntityCoords=true, SetEntityHeading=true,
+            FreezeEntityPosition=true, SetEntityVisible=true,
+            SetPedGravity=true, SetGravityLevel=true,
+            SetEntityVelocity=true, SetEntityRotation=true,
+            SetEntityAlpha=true, SetEntityNoCollisionEntity=true,
+            SetEntityCollision=true, ClearPedTasks=true,
+            ClearPedTasksImmediately=true, SetNuiFocus=true,
+        }
+        local shown = {}
+        for _, n in ipairs(hc.natives) do
+            if important[n.name] and not shown[n.name] then
+                shown[n.name] = true
+                -- Reconstrói a chamada com args conhecidos
+                local args_parts = {}
+                if n.args then
+                    for _, a in ipairs(n.args) do
+                        if type(a) == "number" then
+                            args_parts[#args_parts+1] = tostring(a)
+                        elseif type(a) == "boolean" then
+                            args_parts[#args_parts+1] = tostring(a)
+                        elseif type(a) == "string" then
+                            args_parts[#args_parts+1] = '"'..a..'"'
+                        else
+                            args_parts[#args_parts+1] = "entity"
+                        end
+                    end
+                end
+                if #args_parts > 0 then
+                    lines[#lines+1] = ind..n.name.."("..table.concat(args_parts,", ")..")"
+                else
+                    lines[#lines+1] = ind..n.name.."(entity)"
+                end
+            end
+        end
+    end
+
+    -- ── Modelos carregados ───────────────────────────────────────────
+    if hc.models and #hc.models > 0 then
+        lines[#lines+1] = ""
+        lines[#lines+1] = ind.."-- Modelos usados neste handler:"
+        for _, m in ipairs(hc.models) do
+            lines[#lines+1] = ind..'-- GetHashKey("'..m..'")'
+        end
+    end
+
+    -- ── Conteúdo vazio → comentário informativo ──────────────────────
+    if #lines == 0 then
+        -- Adiciona comentários baseados no tipo de evento
+        if is_auth then
+            lines[#lines+1] = ind.."-- Handler de autenticação/autorização"
+            lines[#lines+1] = ind.."-- Verifica se o jogador tem permissão para usar o resource"
+            if is_server_event then
+                lines[#lines+1] = ind.."TriggerClientEvent(\""..event_name:gsub("desautorizar","autorizar").."\", src, true)"
+            end
+        elseif is_color then
+            lines[#lines+1] = ind.."-- Muda a cor (argumento: índice de cor)"
+            lines[#lines+1] = ind.."local colorIndex = ... -- índice da cor"
+            if is_server_event then
+                lines[#lines+1] = ind..'TriggerClientEvent("'..event_name..'", -1, colorIndex)'
+            end
+        elseif is_sync then
+            lines[#lines+1] = ind.."-- Sincronização multiplayer"
+            lines[#lines+1] = ind.."-- Propaga estado para todos os clientes"
+            if is_server_event then
+                lines[#lines+1] = ind..'TriggerClientEvent("'..event_name..'", -1, ...)'
+            end
+        elseif is_flight then
+            lines[#lines+1] = ind.."-- Controla sistema de voo"
+        elseif is_remove then
+            lines[#lines+1] = ind.."-- Remove entidade/efeito"
+        elseif is_spawn then
+            lines[#lines+1] = ind.."-- Spawna entidade"
+        else
+            lines[#lines+1] = ind.."-- Handler disparado durante simulação (sem chamadas observáveis)"
+        end
+    end
+
+    return lines
+end
+
+-- ════════════════════════════════════════════════════════════════════
 -- Reconstrói server/main_reconstructed.lua
 -- ════════════════════════════════════════════════════════════════════
 local function build_server_main(result)
@@ -108,28 +429,56 @@ local function build_server_main(result)
 -- e de bridge/server.lua (framework detection).
 -- Globals esperados: Config, E, Bridge, PlayerWings, PlayerTails, WingObjects, TailObjects]]
 
+    -- Conta eventos
+    local ev_count = 0
+    for _ in pairs(sv.event_handlers) do ev_count = ev_count + 1 end
+
+    if ev_count == 0 then
+        lines[#lines+1] = section("NOTA: SERVER SEM EVENTOS DIRETOS")
+        lines[#lines+1] = [[-- O servidor deste resource não registrou event handlers
+-- durante a simulação. Isso pode significar:
+-- 1. Os handlers do servidor usam uma estrutura guardada por resource_name
+--    e o nome não correspondeu durante a simulação
+-- 2. Os arquivos server/*.lua fazem RegisterNetEvent mas não AddEventHandler
+--    (os handlers podem estar em callbacks de framework como QBCore/ESX)
+-- 3. A lógica do servidor está toda em server/core.lua (carregado antes)
+--
+-- Os arquivos extras (.lua não listados no manifest) também foram
+-- processados — veja a seção EVENTOS NET REGISTRADOS abaixo.
+]]
+    end
+
     lines[#lines+1] = section("EVENTOS NET REGISTRADOS")
     lines[#lines+1] = "-- Eventos de rede descobertos durante a simulação:"
     local net_list = {}
     for name in pairs(sv.net_events) do net_list[#net_list+1] = name end
     table.sort(net_list)
-    for _, name in ipairs(net_list) do
-        lines[#lines+1] = "-- RegisterNetEvent(\""..name.."\")"
+    if #net_list == 0 then
+        lines[#lines+1] = "-- Nenhum RegisterNetEvent observado no servidor."
+    else
+        for _, name in ipairs(net_list) do
+            lines[#lines+1] = 'RegisterNetEvent("'..name..'")'
+        end
     end
 
     lines[#lines+1] = section("COMANDOS")
     if #sv.commands == 0 then
         lines[#lines+1] = "-- Nenhum comando registrado diretamente neste lado (server)."
-        lines[#lines+1] = "-- Comandos podem estar em server/core.lua ou server/main.lua original."
     else
         for _, cmd in ipairs(sv.commands) do
+            local hc = sv.handler_calls and sv.handler_calls["cmd:"..cmd.name]
             lines[#lines+1] = ""
             lines[#lines+1] = string.format(
                 "-- COMANDO: /%s  (restricted=%s)", cmd.name, tostring(cmd.restricted))
             lines[#lines+1] = string.format(
                 'RegisterCommand("%s", function(source, args, rawCommand)', cmd.name)
-            lines[#lines+1] = '    -- TODO: implementar lógica do comando'
-            lines[#lines+1] = '    -- args[1] = primeiro argumento (ex: número de cor)'
+            lines[#lines+1] = '    local src = source'
+            if hc then
+                local body = build_handler_body("cmd:"..cmd.name, hc, 1, "SERVER")
+                for _, l in ipairs(body) do lines[#lines+1] = l end
+            else
+                lines[#lines+1] = '    -- args[1] = primeiro argumento'
+            end
             lines[#lines+1] = 'end, '..tostring(cmd.restricted)..')'
         end
     end
@@ -138,29 +487,58 @@ local function build_server_main(result)
     if #sv.client_events == 0 then
         lines[#lines+1] = "-- Nenhum TriggerClientEvent observado na simulação."
     else
-        -- Agrupa por nome
         local seen = {}
         for _, ev in ipairs(sv.client_events) do
             if not seen[ev.name] then
                 seen[ev.name] = true
-                lines[#lines+1] = "-- TriggerClientEvent(\""..ev.name.."\", target, ...)"
+                lines[#lines+1] = '-- TriggerClientEvent("'..ev.name..'", target, ...)'
             end
         end
     end
 
-    lines[#lines+1] = section("EVENTOS RECEBIDOS DO CLIENTE")
-    -- Eventos que o server registra handlers
+    lines[#lines+1] = section("EVENTOS RECEBIDOS (HANDLERS DO SERVIDOR)")
     local ev_list = {}
-    for _, ev in ipairs(sv.events) do ev_list[#ev_list+1] = ev.name end
+    for name in pairs(sv.event_handlers) do ev_list[#ev_list+1] = name end
     table.sort(ev_list)
-    for _, name in ipairs(ev_list) do
+
+    if #ev_list == 0 then
+        lines[#lines+1] = "-- Nenhum handler de servidor detectado na simulação."
+        lines[#lines+1] = "-- Se o resource tem lógica de servidor, ela pode estar:"
+        lines[#lines+1] = "-- - em callbacks de framework (ESX/QBCore)"
+        lines[#lines+1] = "-- - protegida por verificação de resource_name"
+        lines[#lines+1] = "-- - usando RegisterNetEvent sem AddEventHandler explícito"
         lines[#lines+1] = ""
-        lines[#lines+1] = "-- EVENTO RECEBIDO: "..name
-        lines[#lines+1] = 'RegisterNetEvent("'..name..'")'
-        lines[#lines+1] = 'AddEventHandler("'..name..'", function(...)'
-        lines[#lines+1] = '    local src = source'
-        lines[#lines+1] = '    -- TODO: lógica do handler'
-        lines[#lines+1] = 'end)'
+        -- Gera handlers baseados nos TriggerServerEvent calls do cliente
+        if result.client and #result.client.server_events > 0 then
+            lines[#lines+1] = "-- Eventos disparados pelo CLIENTE para o servidor:"
+            lines[#lines+1] = "-- (Reconstituídos a partir dos TriggerServerEvent observados)"
+            local seen = {}
+            for _, ev in ipairs(result.client.server_events) do
+                if not seen[ev.name] then
+                    seen[ev.name] = true
+                    lines[#lines+1] = ""
+                    lines[#lines+1] = '-- Evento: '..ev.name
+                    lines[#lines+1] = 'RegisterNetEvent("'..ev.name..'")'
+                    lines[#lines+1] = 'AddEventHandler("'..ev.name..'", function(...)'
+                    lines[#lines+1] = '    local src = source'
+                    -- Tenta classificar
+                    local body = build_handler_body(ev.name, nil, 1, "SERVER")
+                    for _, l in ipairs(body) do lines[#lines+1] = l end
+                    lines[#lines+1] = 'end)'
+                end
+            end
+        end
+    else
+        for _, name in ipairs(ev_list) do
+            lines[#lines+1] = ""
+            lines[#lines+1] = "-- EVENTO: "..name
+            lines[#lines+1] = 'RegisterNetEvent("'..name..'")'
+            lines[#lines+1] = 'AddEventHandler("'..name..'", function(...)'
+            local hc = sv.handler_calls and sv.handler_calls[name]
+            local body = build_handler_body(name, hc, 1, "SERVER")
+            for _, l in ipairs(body) do lines[#lines+1] = l end
+            lines[#lines+1] = 'end)'
+        end
     end
 
     lines[#lines+1] = section("HTTP REQUESTS OBSERVADAS")
@@ -169,7 +547,7 @@ local function build_server_main(result)
     else
         for _, req in ipairs(sv.http_requests) do
             lines[#lines+1] = string.format(
-                "-- %s %s", req.method or "GET", tostring(req.url))
+                '-- %s %s', req.method or "GET", tostring(req.url))
         end
     end
 
@@ -215,9 +593,23 @@ local _animProtPrio  = nil   -- prioridade animprotect atual]]
         lines[#lines+1] = section("NUI CALLBACKS")
         for _, nui in ipairs(cl.nui_callbacks) do
             lines[#lines+1] = ""
-            lines[#lines+1] = "-- NUI Callback: "..nui.name
+            lines[#lines+1] = '-- NUI Callback: '..nui.name
             lines[#lines+1] = 'RegisterNUICallback("'..nui.name..'", function(data, cb)'
-            lines[#lines+1] = '    -- TODO: lógica NUI para "'..nui.name..'"'
+            -- Tenta gerar corpo real
+            local hc = cl.handler_calls and cl.handler_calls["nui:"..nui.name]
+            if hc then
+                local body = build_handler_body("nui:"..nui.name, hc, 1, "CLIENT")
+                for _, l in ipairs(body) do lines[#lines+1] = l end
+            else
+                -- NUI callbacks são opacos — gera código genérico sensato
+                if nui.name == "closeHud" or nui.name:match("[Cc]lose") then
+                    lines[#lines+1] = '    SetNuiFocus(false, false)'
+                elseif nui.name == "hudAction" or nui.name:match("[Aa]ction") then
+                    lines[#lines+1] = '    local action = data.action'
+                    lines[#lines+1] = '    local value  = data.value'
+                    lines[#lines+1] = '    -- processar ação da HUD'
+                end
+            end
             lines[#lines+1] = '    cb({ status = "ok" })'
             lines[#lines+1] = 'end)'
         end
@@ -230,7 +622,10 @@ local _animProtPrio  = nil   -- prioridade animprotect atual]]
             lines[#lines+1] = string.format(
                 'AddStateBagChangeHandler("%s", "%s", function(bagName, key, value, reserved, replicated)',
                 sb.key, sb.bag)
-            lines[#lines+1] = '    -- TODO: reagir à mudança de state bag'
+            lines[#lines+1] = '    -- Reage à mudança de state bag: '..sb.key
+            lines[#lines+1] = '    if value then'
+            lines[#lines+1] = '        -- aplicar novo valor'
+            lines[#lines+1] = '    end'
             lines[#lines+1] = 'end)'
         end
     end
@@ -238,32 +633,40 @@ local _animProtPrio  = nil   -- prioridade animprotect atual]]
     -- Eventos net (handlers do cliente)
     lines[#lines+1] = section("EVENTOS DE REDE (CLIENT HANDLERS)")
     local ev_list = {}
-    for _, ev in ipairs(cl.events) do ev_list[#ev_list+1] = ev.name end
+    for name in pairs(cl.event_handlers) do ev_list[#ev_list+1] = name end
     table.sort(ev_list)
 
     for _, name in ipairs(ev_list) do
-        -- Classifica o tipo de evento
+        -- Classifica o tipo de evento para o comentário
         local tag = ""
-        if name:find(":spawn$") then tag = " -- Spawna entidade"
-        elseif name:find(":remove$") or name:find(":remove$") then tag = " -- Remove entidade"
-        elseif name:find(":abrir$") or name:find(":fechar$") or name:find(":bater$") then tag = " -- Animação de asa"
-        elseif name:find("tail:") then tag = " -- Cauda"
-        elseif name:find("sync:") then tag = " -- Sincronização multiplayer"
-        elseif name:find("animprotect") then tag = " -- Sistema de proteção de animação"
-        elseif name:find("flight:") then tag = " -- Sistema de voo"
-        elseif name:find("auth") then tag = " -- Autenticação/autorização"
+        if name:find(":spawn$")      then tag = " -- Spawna entidade"
+        elseif name:find(":remove$") then tag = " -- Remove entidade"
+        elseif name:find(":abrir$") or name:find(":fechar$") or name:find(":bater$") then
+            tag = " -- Animação"
+        elseif name:find("tail:")    then tag = " -- Cauda"
+        elseif name:find("sync:")    then tag = " -- Sincronização"
+        elseif name:find("animprotect") then tag = " -- AnimProtect"
+        elseif name:find("flight:")  then tag = " -- Voo"
+        elseif name:find("auth")     then tag = " -- Autenticação"
+        elseif name:find("color")    then tag = " -- Cor"
         end
+
         lines[#lines+1] = ""
-        lines[#lines+1] = "RegisterNetEvent(\""..name.."\")"
-        lines[#lines+1] = "AddEventHandler(\""..name.."\", function(...)"..tag
-        lines[#lines+1] = "    -- TODO: implementar handler"
-        lines[#lines+1] = "end)"
+        lines[#lines+1] = 'RegisterNetEvent("'..name..'")'
+        lines[#lines+1] = 'AddEventHandler("'..name..'", function(...)' .. tag
+
+        -- Gera corpo REAL a partir das chamadas observadas
+        local hc = cl.handler_calls and cl.handler_calls[name]
+        local body = build_handler_body(name, hc, 1, "CLIENT")
+        for _, l in ipairs(body) do lines[#lines+1] = l end
+
+        lines[#lines+1] = 'end)'
     end
 
     -- Animações descobertas
     if next(cl.anim_dicts) then
         lines[#lines+1] = section("ANIMAÇÕES DESCOBERTAS")
-        lines[#lines+1] = "-- Dicionários de animação utilizados:"
+        lines[#lines+1] = "-- Dicionários de animação utilizados (referência):"
         local dicts = {}
         for dict in pairs(cl.anim_dicts) do dicts[#dicts+1] = dict end
         table.sort(dicts)
@@ -304,7 +707,7 @@ local _animProtPrio  = nil   -- prioridade animprotect atual]]
         lines[#lines+1] = "-- Chamadas AttachEntityToEntity observadas:"
         for _, a in ipairs(cl.attach_calls) do
             lines[#lines+1] = string.format(
-                "--   entity=%d to=%d bone=%d off=(%.2f,%.2f,%.2f) rot=(%.2f,%.2f,%.2f)",
+                "--   entity=%d to=%d bone=%d off=(%.4f,%.4f,%.4f) rot=(%.4f,%.4f,%.4f)",
                 a.entity or 0, a.entityTo or 0, a.bone or 0,
                 a.offset[1] or 0, a.offset[2] or 0, a.offset[3] or 0,
                 a.rot[1] or 0, a.rot[2] or 0, a.rot[3] or 0)
@@ -367,19 +770,23 @@ local function build_events_map(result)
         lines[#lines+1] = "-- Eventos extraídos diretamente dos handlers:"
         lines[#lines+1] = ""
         local sv_evs, cl_evs = {}, {}
-        for _, ev in ipairs(result.server.events) do sv_evs[ev.name] = true end
-        for _, ev in ipairs(result.client.events) do cl_evs[ev.name] = true end
+        for name in pairs(result.server.event_handlers) do sv_evs[name] = true end
+        for name in pairs(result.client.event_handlers) do cl_evs[name] = true end
         local all = {}
         for n in pairs(sv_evs) do all[n] = "server" end
         for n in pairs(cl_evs) do
             all[n] = all[n] and "shared" or "client"
         end
+        -- Adiciona TriggerServerEvent do cliente (eventos esperados no servidor)
+        for _, ev in ipairs(result.client.server_events) do
+            if not all[ev.name] then all[ev.name] = "server(expected)" end
+        end
         local names = {}
         for n in pairs(all) do names[#names+1] = n end
         table.sort(names)
-        lines[#lines+1] = "-- Todos os eventos registrados:"
+        lines[#lines+1] = "-- Todos os eventos registrados e esperados:"
         for _, n in ipairs(names) do
-            lines[#lines+1] = string.format('-- [%-8s]  "%s"', all[n], n)
+            lines[#lines+1] = string.format('-- [%-18s]  "%s"', all[n], n)
         end
     end
 
@@ -444,18 +851,26 @@ local function build_report(result)
         lines[#lines+1] = string.rep("#", level).." "..text
     end
     local function p(text) lines[#lines+1] = (text or "") end
-    local function code(lang, text)
-        lines[#lines+1] = "```"..(lang or "")
-        lines[#lines+1] = text
-        lines[#lines+1] = "```"
-    end
 
     h(1, "Análise Dinâmica: "..res)
     p("Gerado em: "..os.date("%Y-%m-%d %H:%M:%S").." por fivem_deob")
     p("")
 
+    -- Arquivos analisados
+    if result.all_files and #result.all_files > 0 then
+        h(2, "Arquivos Analisados")
+        p("Total de arquivos .lua no resource: **"..#result.all_files.."**")
+        if result.extra_files and #result.extra_files > 0 then
+            p("")
+            p("Arquivos **não listados no fxmanifest** mas encontrados e processados:")
+            for _, f in ipairs(result.extra_files) do
+                p("- `"..f.."`")
+            end
+        end
+        p("")
+    end
+
     h(2, "Visão Geral")
-    -- Conta eventos únicos
     local sv_evs, cl_evs = 0, 0
     for _ in pairs(sv.event_handlers) do sv_evs=sv_evs+1 end
     for _ in pairs(cl.event_handlers) do cl_evs=cl_evs+1 end
@@ -529,7 +944,6 @@ local function build_report(result)
     end
     p("")
 
-    -- Globals internos de config_internal
     h(2, "Config Internal (Obfuscado)")
     local ci_keys = { "BoneId","TailBoneId","ModelPrefix","TailModelPrefix",
                       "MaxColors","TailMaxColors","AP_ApiBase","AP_ConvarName","AP_ProductSlug" }
@@ -548,8 +962,27 @@ local function build_report(result)
     local sv_ev_names = {}
     for name in pairs(sv.event_handlers) do sv_ev_names[#sv_ev_names+1] = name end
     table.sort(sv_ev_names)
-    for _, name in ipairs(sv_ev_names) do
-        p("- `"..name.."`  ("..#sv.event_handlers[name].." handler(s))")
+    if #sv_ev_names == 0 then
+        p("*Nenhum handler de servidor detectado na simulação.*")
+        p("")
+        p("Eventos esperados (TriggerServerEvent do cliente):")
+        local seen = {}
+        for _, ev in ipairs(cl.server_events) do
+            if not seen[ev.name] then
+                seen[ev.name] = true
+                p("- `"..ev.name.."`")
+            end
+        end
+    else
+        for _, name in ipairs(sv_ev_names) do
+            local hc = sv.handler_calls and sv.handler_calls[name]
+            local call_count = hc and (
+                (hc.natives and #hc.natives or 0) +
+                (hc.triggers_client and #hc.triggers_client or 0) +
+                (hc.anims_played and #hc.anims_played or 0)
+            ) or 0
+            p("- `"..name.."` — "..call_count.." chamadas observadas")
+        end
     end
     p("")
 
@@ -576,12 +1009,20 @@ local function build_report(result)
     p("")
 
     h(2, "Eventos do Cliente")
-    h(3, "Eventos Registrados")
+    h(3, "Eventos Registrados (com chamadas observadas)")
     local cl_ev_names = {}
     for name in pairs(cl.event_handlers) do cl_ev_names[#cl_ev_names+1] = name end
     table.sort(cl_ev_names)
     for _, name in ipairs(cl_ev_names) do
-        p("- `"..name.."` ("..#cl.event_handlers[name].." handler(s))")
+        local hc = cl.handler_calls and cl.handler_calls[name]
+        local call_count = hc and (
+            (hc.natives and #hc.natives or 0) +
+            (hc.triggers_server and #hc.triggers_server or 0) +
+            (hc.anims_played and #hc.anims_played or 0) +
+            (hc.entities_created or 0) +
+            (hc.entities_deleted or 0)
+        ) or 0
+        p("- `"..name.."` — "..call_count.." chamadas observadas")
     end
     p("")
 
@@ -662,7 +1103,7 @@ local function build_report(result)
         p("| Entity | EntityTo | Bone | Offset | Rot |")
         p("|--------|----------|------|--------|-----|")
         for _, a in ipairs(cl.attach_calls) do
-            p(string.format("| %d | %d | %d | (%.2f,%.2f,%.2f) | (%.2f,%.2f,%.2f) |",
+            p(string.format("| %d | %d | %d | (%.4f,%.4f,%.4f) | (%.4f,%.4f,%.4f) |",
                 a.entity or 0, a.entityTo or 0, a.bone or 0,
                 a.offset[1] or 0, a.offset[2] or 0, a.offset[3] or 0,
                 a.rot[1] or 0, a.rot[2] or 0, a.rot[3] or 0))
@@ -720,9 +1161,12 @@ análise dinâmica dos scripts (incluindo os obfuscados via Luraph).
 5. `output/client/main_reconstructed.lua` — estrutura do client/main.lua
 
 **Próximos passos:**
-- Revise os handlers nos arquivos reconstruídos e adicione a lógica real
+- Revise os handlers nos arquivos reconstruídos — o corpo foi gerado
+  com base nas chamadas REAIS observadas durante a simulação
 - Use os nomes dos eventos da tabela E para conectar server ↔ client
 - Verifique os bones, modelos e animações descobertos
+- Handlers marcados como "sem chamadas observáveis" precisam de
+  lógica adicional deduzida pelo contexto do nome do evento
 ]])
 
     return table.concat(lines, "\n")
@@ -734,14 +1178,11 @@ end
 function REC.generate(result, output_dir)
     output_dir = output_dir or "output"
 
-    -- Cria diretórios necessários
-    local function mkdir(dir)
-        os.execute('mkdir -p "'..dir..'"')
-    end
-    mkdir(output_dir)
-    mkdir(output_dir.."/server")
-    mkdir(output_dir.."/client")
-    mkdir(output_dir.."/shared")
+    -- Cria diretórios de forma portável (sem -p)
+    mkdirp(output_dir)
+    mkdirp(output_dir.."/server")
+    mkdirp(output_dir.."/client")
+    mkdirp(output_dir.."/shared")
 
     local files_written = {}
 
