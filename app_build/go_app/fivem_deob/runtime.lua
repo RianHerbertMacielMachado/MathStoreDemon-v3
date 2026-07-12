@@ -107,19 +107,88 @@ function RT.new_env(side, opts)
 
     -- Write-through: env → _G  (crítico para Luraph inner VMs)
     local _skip = { _G=true, package=true, io=true, os=true, debug=true }
+
+    -- Funções críticas do runtime que NUNCA devem ser sobrescritas por proxies
+    -- nem contaminadas entre ambientes sv/cl via _G.
+    local _protected = {
+        Wait=true, CreateThread=true, Citizen=true,
+        AddEventHandler=true, RegisterNetEvent=true, RegisterCommand=true,
+        TriggerEvent=true, TriggerServerEvent=true, TriggerClientEvent=true,
+        TriggerLatentClientEvent=true, RegisterKeyMapping=true,
+        RegisterNuiCallback=true, SendNuiMessage=true, SetNuiMessage=true,
+        exports=true, GetCurrentResourceName=true,
+    }
+
+    -- Proxy universal: evita "attempt to call a nil value (field '?')" do Luraph VM.
+    -- Quando o script acessa uma global não declarada (ex: Bridge.someMethod),
+    -- retornamos um proxy que aceita índice, chamada e aritmética sem erro.
+    local _proxy_cache = {}
+    local function make_env_proxy(name)
+        if _proxy_cache[name] then return _proxy_cache[name] end
+        local mt = {}
+        mt.__index    = function(t, k)
+            local child = make_env_proxy((name or "?").."."..tostring(k))
+            -- NÃO cacheia via rawset: evita sobrescrever valores reais do proxy-pai
+            return child
+        end
+        mt.__newindex = rawset
+        mt.__call     = function(t, ...) return make_env_proxy((name or "?").."()") end
+        mt.__tostring = function() return "<proxy:"..(name or "?")..">" end
+        mt.__len      = function() return 0 end
+        mt.__concat   = function(a, b) return tostring(a)..tostring(b) end
+        mt.__add      = function() return 0 end;  mt.__sub  = function() return 0 end
+        mt.__mul      = function() return 0 end;  mt.__div  = function() return 1 end
+        mt.__mod      = function() return 0 end;  mt.__pow  = function() return 1 end
+        mt.__unm      = function() return 0 end;  mt.__idiv = function() return 0 end
+        mt.__band     = function() return 0 end;  mt.__bor  = function() return 0 end
+        mt.__bxor     = function() return 0 end;  mt.__bnot = function() return 0 end
+        mt.__shl      = function() return 0 end;  mt.__shr  = function() return 0 end
+        mt.__lt       = function() return false end
+        mt.__le       = function() return false end
+        mt.__eq       = function() return false end
+        local p = setmetatable({}, mt)
+        _proxy_cache[name] = p
+        return p
+    end
+
     setmetatable(env, {
         __index = function(t, k)
-            return rawget(t,k) or rawget(_G, k)
+            -- 1. Verifica o próprio env (inclui todas as funções do runtime definidas abaixo)
+            local v = rawget(t, k)
+            if v ~= nil then return v end
+            -- 2. Para funções protegidas NÃO busca em _G (evita contaminação cross-env).
+            --    Ex: se sv_env escreveu Wait=proxy em _G, cl_env NÃO deve herdar isso.
+            if not _protected[k] then
+                v = rawget(_G, k)
+                -- Só retorna valor de _G se for função Lua real (não proxy de outro env)
+                if type(v) == "function" then return v end
+            end
+            -- 3. Retorna proxy para globals desconhecidos.
+            --    NÃO cacheia no env com rawset — evita sobrescrever valores
+            --    definidos em make_env() que ainda não foram lidos.
+            return make_env_proxy(tostring(k))
         end,
         __newindex = function(t, k, v)
+            -- Protege funções críticas do runtime contra sobrescrita por scripts
+            if _protected[k] then
+                local cur = rawget(t, k)
+                -- Só permite sobrescrever se o atual não é função real do runtime
+                if type(cur) == "function" then return end
+            end
             rawset(t, k, v)
-            if not _skip[k] then rawset(_G, k, v) end
+            -- Propaga para _G apenas valores não-protegidos (sem funções FiveM)
+            if not _skip[k] and not _protected[k] then
+                rawset(_G, k, v)
+            end
         end,
     })
 
-    -- Sync inicial
+    -- Sync inicial: NÃO copia funções FiveM para _G (ficam só no env)
+    -- Isso evita que sv_env e cl_env contaminem _G com suas funções
     for k,v in pairs(env) do
-        if not _skip[k] then rawset(_G, k, v) end
+        if not _skip[k] and not _protected[k] and type(v) ~= "function" then
+            rawset(_G, k, v)
+        end
     end
 
     -- Armazena referência ao data para acesso externo
@@ -187,7 +256,7 @@ function RT.new_env(side, opts)
             local ok, err = pcall(fn)
             if not ok then log_fn("Thread.ERROR", "#"..id.." "..tostring(err)) end
         end)
-        data.threads[#data.threads+1] = { id=id, co=co }
+        data.threads[#data.threads+1] = { id=id, co=co, ticks_run=0 }
         return co
     end
     env.Citizen = {
@@ -242,13 +311,12 @@ function RT.new_env(side, opts)
 
     local function fire_handlers(eventName, args)
         if data.event_handlers[eventName] then
-            local old_wait = rawget(_G, "Wait")
-            rawset(_G, "Wait", function(ms) end)   -- no-op Wait em handlers
+            -- NÃO sobrescreve _G.Wait (causa contaminação cross-env).
+            -- Handlers chamam env.Wait que está protegida via __index.
             for _, h in ipairs(data.event_handlers[eventName]) do
                 local ok, err = pcall(h, table.unpack(args))
                 if not ok then log_fn("Event.ERROR", '"'..eventName..'" '..tostring(err)) end
             end
-            rawset(_G, "Wait", old_wait)
         end
     end
 
@@ -514,11 +582,21 @@ function RT.new_env(side, opts)
     end
     env.HasAnimDictLoaded = function(d) return true end
     env.RemoveAnimDict = function(d)
-        -- Também registra em anim_dicts — se foi removido, foi usado
+        -- Registra em anim_dicts — se foi removido, foi usado
         if type(d) == "string" and d ~= "" then
             data.anim_dicts[d] = true
         end
         log_fn("RemoveAnimDict", '"'..tostring(d)..'"')
+        -- Rastreia por handler (mesma lógica do RequestAnimDict)
+        if _current_handler and type(d) == "string" and d ~= "" then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.anims = hc.anims or {}
+                local found = false
+                for _, v in ipairs(hc.anims) do if v == d then found = true; break end end
+                if not found then table.insert(hc.anims, d) end
+            end
+        end
     end
     env.TaskPlayAnim = function(ped, animDict, animName, blendIn, blendOut, duration, flag, ...)
         local play = {
@@ -887,17 +965,55 @@ function RT.run_threads(env, max_ticks)
     local data = env.__deob_data
     if not data or #data.threads == 0 then return end
 
+    -- Limite de instruções por resume: mata threads busy-loop sem yield
+    local MAX_INSTRS = 500000
+    -- Limite TOTAL de ticks por thread (contado entre todas as chamadas
+    -- a run_threads). Mata threads Wait(0)-loop que sobrevivem à extração.
+    local MAX_TOTAL_TICKS = 30
+
+    local log_fn = data._log_fn or function() end
+
     for tick = 1, max_ticks do
         local alive = {}
         for _, entry in ipairs(data.threads) do
             if coroutine.status(entry.co) ~= "dead" then
+                -- Mata thread que já rodou demais (Wait(0) loop persistente)
+                entry.ticks_run = (entry.ticks_run or 0) + 1
+                if entry.ticks_run > MAX_TOTAL_TICKS then
+                    log_fn("Thread.KILLED", "#"..entry.id
+                        .." (loop persistente — "..entry.ticks_run.." ticks totais excedido)")
+                    -- Não retoma — deixa o coroutine morrer silenciosamente
+                    goto continue
+                end
+
+                -- Instala hook de contagem de instruções no coroutine
+                local instr_count = 0
+                local killed = false
+                local function budget_hook()
+                    instr_count = instr_count + 1
+                    if instr_count >= MAX_INSTRS then
+                        killed = true
+                        error("__thread_budget_exceeded__", 2)
+                    end
+                end
+                local ok_hook, _ = pcall(debug.sethook, entry.co, budget_hook, "", 1000)
+
                 local ok, w = coroutine.resume(entry.co)
+
+                -- Remove o hook (ignorar erros)
+                pcall(debug.sethook, entry.co, nil)
+
                 if not ok then
-                    local log_fn = data._log_fn or function() end
-                    log_fn("Thread.ERROR", "#"..entry.id.." "..tostring(w))
+                    if killed or (type(w)=="string" and w:find("__thread_budget_exceeded__")) then
+                        log_fn("Thread.KILLED", "#"..entry.id.." (loop infinito — budget de "..MAX_INSTRS.." instruções excedido)")
+                    else
+                        log_fn("Thread.ERROR", "#"..entry.id.." "..tostring(w))
+                    end
                 elseif coroutine.status(entry.co) ~= "dead" then
                     alive[#alive+1] = entry
                 end
+
+                ::continue::
             end
         end
         data.threads = alive
@@ -910,15 +1026,15 @@ function RT.fire_event(env, eventName, ...)
     local data = env.__deob_data
     local args = {...}
     if data.event_handlers[eventName] then
-        local old_wait = rawget(_G, "Wait")
-        rawset(_G, "Wait", function(ms) end)
+        -- NÃO sobrescreve _G.Wait (causa contaminação cross-env).
+        -- Os handlers chamam env.Wait que está protegida no env.
         for _, h in ipairs(data.event_handlers[eventName]) do
             local ok, err = pcall(h, table.unpack(args))
             if not ok then
-                -- silently log
+                local log_fn = data._log_fn or function() end
+                log_fn("Event.ERROR", '"'..eventName..'" '..tostring(err))
             end
         end
-        rawset(_G, "Wait", old_wait)
     end
 end
 

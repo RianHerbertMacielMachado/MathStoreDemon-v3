@@ -191,14 +191,28 @@ local function build_handler_body(event_name, hc, indent_level, side)
     -- Detecta tipo de evento pelo nome
     local is_spawn  = event_name:match(":spawn$") or event_name:match("^spawn$")
     local is_remove = event_name:match(":remove$") or event_name:match("^remove$")
+                   or event_name:match("remov") or event_name:match("deletar$")
+                   or event_name:match("delete$")
     local is_anim   = event_name:match(":abrir$") or event_name:match(":fechar$")
                    or event_name:match(":bater$")  or event_name:match(":enrolar$")
                    or event_name:match(":reta$")
+                   or event_name:match("ritual") or event_name:match("agachar")
+                   or event_name:match("meditar") or event_name:match("asaidle")
+                   or event_name:match("asaprazer") or event_name:match("msubir")
+                   or event_name:match("mdescer") or event_name:match("sair$")
+                   or event_name:match("pegarasa") or event_name:match("removerasa")
+                   or event_name:match("runafada") or event_name:match("runadeletar")
     local is_color  = event_name:match(":changeColor$") or event_name:match("color")
     local is_sync   = event_name:match("^sync:") or event_name:match(":sync:")
     local is_flight = event_name:match("^flight:") or event_name:match(":flight:")
     local is_auth   = event_name:match("auth") or event_name:match("autorizar")
     local is_tail   = event_name:match("^tail:")
+    local is_rune   = event_name:match("rune") or event_name:match("Rune")
+    local is_hud    = event_name:match("hud") or event_name:match("Hud")
+                   or event_name:match("^cl_h") or event_name:match("asasv5")
+    local is_sound  = event_name:match("sound") or event_name:match("Sound")
+                   or event_name:match("playSound")
+    local is_fly    = event_name:match(":fly$") or event_name:match(":toggle$")
     local is_server_event = (side == "SERVER")
 
     -- ── Parâmetros típicos de servidor ──────────────────────────────
@@ -432,12 +446,61 @@ local function build_handler_body(event_name, hc, indent_level, side)
             if is_server_event then
                 lines[#lines+1] = ind.."TriggerClientEvent(\""..event_name:gsub("desautorizar","autorizar").."\", src, true)"
             end
+        elseif is_hud then
+            lines[#lines+1] = ind.."-- Handler da HUD / interface"
+            if event_name:match("asasv5hud") then
+                lines[#lines+1] = ind.."-- Atualiza a HUD de asas (recebe dados de config)"
+                lines[#lines+1] = ind.."-- SetNuiFocus(true, true)"
+                lines[#lines+1] = ind.."-- SendNuiMessage(json.encode({ action = 'openHud', data = {...} }))"
+            elseif event_name:match("^cl_h") then
+                lines[#lines+1] = ind.."-- Callback do servidor para validação HUD"
+                lines[#lines+1] = ind.."-- (resposta de sv_h1/sv_h2)"
+            end
+        elseif is_sound then
+            lines[#lines+1] = ind.."-- Reproduz som de sincronização"
+            lines[#lines+1] = ind.."-- PlaySoundFrontend(-1, \"soundName\", \"soundSet\", true)"
+        elseif is_rune then
+            if event_name:match("runeSpawn") or event_name:match("runafada") then
+                lines[#lines+1] = ind.."-- Spawna objeto de runa"
+                lines[#lines+1] = ind.."local runaId = ... -- ID do modelo de runa"
+                lines[#lines+1] = ind.."local model = GetHashKey(\"fada_rune_\"..tostring(runaId))"
+                lines[#lines+1] = ind.."RequestModel(model)"
+                lines[#lines+1] = ind.."while not HasModelLoaded(model) do Wait(10) end"
+                lines[#lines+1] = ind.."local coords = GetEntityCoords(PlayerPedId())"
+                lines[#lines+1] = ind.."local entity = CreateObject(model, coords.x, coords.y, coords.z, true, true, false)"
+                lines[#lines+1] = ind.."SetModelAsNoLongerNeeded(model)"
+            elseif event_name:match("runeDelete") or event_name:match("runadeletar")
+                   or event_name:match("runeRemoveOldest") then
+                lines[#lines+1] = ind.."-- Remove entidade(s) de runa"
+                lines[#lines+1] = ind.."if DoesEntityExist(runeEntity) then"
+                lines[#lines+1] = ind2.."DeleteObject(runeEntity)"
+                lines[#lines+1] = ind.."end"
+            else
+                lines[#lines+1] = ind.."-- Handler de runa"
+            end
         elseif is_color then
             lines[#lines+1] = ind.."-- Muda a cor (argumento: índice de cor)"
             lines[#lines+1] = ind.."local colorIndex = ... -- índice da cor"
             if is_server_event then
                 lines[#lines+1] = ind..'TriggerClientEvent("'..event_name..'", -1, colorIndex)'
             end
+        elseif is_anim then
+            -- Evento de animação — gera código baseado no nome
+            local short = event_name:match(":(.+)$") or event_name
+            lines[#lines+1] = ind.."-- Animação: "..short
+            lines[#lines+1] = ind.."local ped = PlayerPedId()"
+            if event_name:match("sair$") or event_name:match("agacharsair")
+               or event_name:match("meditarsair") or event_name:match("ritualsair") then
+                lines[#lines+1] = ind.."-- Cancela animação ativa"
+                lines[#lines+1] = ind.."ClearPedTasksImmediately(ped)"
+            else
+                lines[#lines+1] = ind.."-- Carrega dict e executa animação"
+                lines[#lines+1] = ind.."-- RequestAnimDict(\"dict_name\")"
+                lines[#lines+1] = ind.."-- TaskPlayAnim(ped, \"dict_name\", \"anim_name\", 8.0, -8.0, -1, 0, 0, false, false, false)"
+            end
+        elseif is_fly then
+            lines[#lines+1] = ind.."-- Alterna estado de voo / visibilidade das asas"
+            lines[#lines+1] = ind.."local state = ... -- true/false"
         elseif is_sync then
             lines[#lines+1] = ind.."-- Sincronização multiplayer"
             lines[#lines+1] = ind.."-- Propaga estado para todos os clientes"
@@ -597,28 +660,31 @@ end)
                 lines[#lines+1] = '    for playerId, ps in pairs(PlayerState) do'
                 lines[#lines+1] = '        if ps.active and ps.wingId then'
                 lines[#lines+1] = '            bulk[#bulk+1] = {'
-                lines[#lines+1] = '                src   = playerId,'
+                lines[#lines+1] = '                src    = playerId,'
                 lines[#lines+1] = '                wingId = ps.wingId,'
                 lines[#lines+1] = '                color  = ps.color,'
                 lines[#lines+1] = '            }'
                 lines[#lines+1] = '        end'
                 lines[#lines+1] = '    end'
                 lines[#lines+1] = '    TriggerClientEvent("'..res..':sync:bulk", src, bulk)'
-            elseif short:match("^sv_h") then
-                lines[#lines+1] = '    -- Handler de servidor (hud / validação)'
+            elseif short:match("^sv_h(%d+)") then
+                -- sv_h1, sv_h2 → HUD validation → responds with cl_h1, cl_h2
+                local n = short:match("^sv_h(%d+)") or "1"
+                lines[#lines+1] = '    -- Validação HUD (resposta: cl_h'..n..')'
                 lines[#lines+1] = '    local playerData = initPlayer(src)'
-                lines[#lines+1] = '    -- TriggerClientEvent("'..res..':cl_'..short:sub(4)..'", src, playerData)'
-            elseif short:match("buscar[Cc]heckpoints") or short:match("checkpoint") then
+                lines[#lines+1] = '    -- TODO: validar dados e responder'
+                lines[#lines+1] = '    TriggerClientEvent("'..res..':cl_h'..n..'", src, playerData.authed, playerData.wingId)'
+            elseif short:match("[Bb]uscar[Cc]heckpoints") or short:match("[Cc]heckpoint") then
                 lines[#lines+1] = '    -- Envia checkpoints de autenticação para o cliente'
                 lines[#lines+1] = '    local data = Checkpoints[src] or {}'
                 lines[#lines+1] = '    TriggerClientEvent("'..res..':receberCheckpoints", src, data)'
             elseif short:match("spawn$") then
-                lines[#lines+1] = '    local wingId = args[1]  -- ID do modelo de asa'
+                lines[#lines+1] = '    local wingId = args[1]  -- ID do modelo de asa (1-35)'
                 lines[#lines+1] = '    state.wingId = wingId'
                 lines[#lines+1] = '    state.active = true'
                 lines[#lines+1] = '    -- Sincroniza para todos os clientes'
                 lines[#lines+1] = '    TriggerClientEvent("'..res..':sync:spawn", -1, src, wingId, state.color)'
-            elseif short:match("remove$") then
+            elseif short:match("remove$") or short:match("remov") then
                 lines[#lines+1] = '    state.active = false'
                 lines[#lines+1] = '    state.wingId = nil'
                 lines[#lines+1] = '    TriggerClientEvent("'..res..':sync:remove", -1, src)'
@@ -626,9 +692,12 @@ end)
                 lines[#lines+1] = '    local newColor = args[1] or 0'
                 lines[#lines+1] = '    state.color = newColor'
                 lines[#lines+1] = '    TriggerClientEvent("'..res..':changeColor", -1, src, newColor)'
-            elseif short:match("anim") or short:match("bulk") then
-                lines[#lines+1] = '    -- Propaga sincronização de animação para todos'
+            elseif short:match("^sync:anim") or short:match("^sync:playSound") then
+                lines[#lines+1] = '    -- Propaga evento de sincronização para todos os clientes'
                 lines[#lines+1] = '    TriggerClientEvent("'..name..'", -1, src, ...)'
+            elseif short:match("bulk") then
+                lines[#lines+1] = '    -- Sincronização em massa'
+                lines[#lines+1] = '    TriggerClientEvent("'..name..'", src, ...)'
             else
                 lines[#lines+1] = '    -- TODO: implementar lógica para este evento'
                 lines[#lines+1] = '    -- args = { ... }'
