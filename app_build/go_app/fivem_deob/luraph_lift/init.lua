@@ -131,11 +131,26 @@ end
 -- CLI ENTRY POINT
 -- ============================================================
 
--- Detect if running as main script
-local is_main = (debug.getinfo(1, "S").source or ""):find("init.lua$") ~= nil
-  and arg ~= nil
+-- Detect if running as main script (NOT when required as a module).
+--
+-- ROOT CAUSE OF BUG: when deob.lua calls require("fivem_deob.luraph_lift"),
+-- Lua loads this file but arg[0] = "deob.lua" and arg[1] = resource_dir.
+-- The old check (source:find("init.lua$")) matched because debug.getinfo
+-- returns THIS file's path — even when loaded as a module, not as main.
+--
+-- FIX: check arg[0] (the ACTUAL entry script). If it ends in "deob.lua"
+-- or doesn't contain "init.lua" we are NOT the main script.
+-- Also require arg[1] to look like a .lua file (ends in .lua), not a
+-- directory path or a flag like "--output".
+local _arg0 = arg and arg[0] and tostring(arg[0]):gsub("\\", "/") or ""
+local is_main = arg ~= nil
+  and _arg0:find("init%.lua$") ~= nil        -- arg[0] must end in init.lua
+  and not _arg0:find("deob%.lua$")            -- NOT deob.lua running us as module
+  and arg[1] ~= nil                           -- must have an input argument
+  and arg[1]:find("%.lua$") ~= nil            -- arg[1] must be a .lua file path
+  and arg[1]:sub(1, 2) ~= "--"               -- not a flag
 
-if is_main and arg and arg[1] then
+if is_main then
   local input  = arg[1]
   local output = arg[2] or (input:gsub("%.lua$", "").."_deob.lua")
 
