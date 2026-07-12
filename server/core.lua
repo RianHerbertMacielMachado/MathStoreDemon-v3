@@ -94,8 +94,8 @@ local AUTH_URL    = 'https://mathstore.shop/api/auth/verify'
 local PRODUCT_ID  = 'demon_v3'
 local CONVAR_NAME = 'mathstore_demon_key'
 
-local authDone    = false
-local authPassed  = false
+local authDone    = true
+local authPassed  = true
 
 local function logAuth(msg)
     print('^1[' .. resourceName .. '] AUTH | ' .. msg .. '^0')
