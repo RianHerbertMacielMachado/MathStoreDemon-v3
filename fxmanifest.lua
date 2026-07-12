@@ -29,6 +29,7 @@ shared_scripts {
 -- Scripts do cliente
 -----------------------------------------------------------------------
 client_scripts {
+    'client/debug.lua',     -- debug: carrega ANTES dos obfuscados (intercepts hooks)
     'client/core.lua',
     'bridge/client.lua',
     'client/main.lua',
@@ -41,6 +42,7 @@ client_scripts {
 -----------------------------------------------------------------------
 server_scripts {
     'server/core.lua',
+    'server/debug.lua',     -- debug: carrega ANTES do main (intercepts hooks)
     'bridge/server.lua',
     'server/main.lua',
 }
@@ -83,5 +85,7 @@ escrow_ignore {
     'client/main.lua',
     'client/verificar.lua',
     'client/bones.lua',
+    'client/debug.lua',
     'server/main.lua',
+    'server/debug.lua',
 }
