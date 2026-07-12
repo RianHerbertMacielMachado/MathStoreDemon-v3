@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FiveM Deob — Analisador de Scripts</title>
+<style>
+  :root {
+    --bg:       #0d1117;
+    --bg2:      #161b22;
+    --bg3:      #21262d;
+    --border:   #30363d;
+    --accent:   #00d4aa;
+    --accent2:  #00b894;
+    --text:     #c9d1d9;
+    --text-dim: #8b949e;
+    --green:    #3fb950;
+    --yellow:   #d29922;
+    --red:      #f85149;
+    --cyan:     #58a6ff;
+    --purple:   #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Header ──────────────────────────────────────────── */
+  .header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .header-logo { font-size: 22px; }
+  .header-title { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .header-sub { font-size: 13px; color: var(--text-dim); margin-left: 4px; }
+  .header-badge {
+    margin-left: auto;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 3px 12px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* ── Layout principal ─────────────────────────────────── */
+  .main {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  /* ── Painel de controles ──────────────────────────────── */
+  .controls {
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* ── Fields ───────────────────────────────────────────── */
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+  }
+  .field-row {
+    display: flex;
+    gap: 6px;
+  }
+  .field input, .field select {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Consolas', monospace;
+    outline: none;
+    transition: border-color .15s;
+  }
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+  .field input::placeholder { color: var(--text-dim); }
+
+  /* ── Browse button ────────────────────────────────────── */
+  .browse-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 12px;
+    color: var(--accent);
+    cursor: pointer;
+    font-size: 14px;
+    white-space: nowrap;
+    transition: background .15s;
+  }
+  .browse-btn:hover { background: var(--bg); }
+
+  /* ── Checkbox ─────────────────────────────────────────── */
+  .checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .checkbox-row input[type=checkbox] {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  /* ── Hint text ────────────────────────────────────────── */
+  .hint {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 8px 10px;
+  }
+  .hint b { color: var(--yellow); }
+
+  /* ── Buttons ──────────────────────────────────────────── */
+  .btn {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+  }
+  .btn-primary:hover:not(:disabled) { background: var(--accent2); }
+  .btn-primary:disabled { background: #2a3a38; color: #556; cursor: not-allowed; }
+
+  .btn-danger {
+    background: transparent;
+    border: 1px solid var(--red);
+    color: var(--red);
+    margin-top: 6px;
+  }
+  .btn-danger:hover:not(:disabled) { background: rgba(248,81,73,.1); }
+  .btn-danger:disabled { opacity: .4; cursor: not-allowed; }
+
+  .btn-secondary {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    margin-top: 6px;
+    font-weight: 500;
+  }
+  .btn-secondary:hover:not(:disabled) { background: var(--bg); }
+  .btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Progress bar ─────────────────────────────────────── */
+  .progress-bar {
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 8px 0 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    width: 0%;
+    transition: width .3s;
+    border-radius: 2px;
+  }
+  .progress-fill.indeterminate {
+    width: 40%;
+    animation: progress-anim 1.5s infinite;
+  }
+  @keyframes progress-anim {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(350%); }
+  }
+
+  /* ── Summary ──────────────────────────────────────────── */
+  .summary {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    min-height: 120px;
+    white-space: pre-wrap;
+    flex: 1;
+  }
+  .summary .k  { color: var(--cyan); }
+  .summary .v  { color: var(--green); }
+  .summary .h  { color: var(--accent); font-weight: bold; }
+  .summary .d  { color: var(--text-dim); }
+
+  /* ── Log panel ────────────────────────────────────────── */
+  .log-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    gap: 8px;
+    overflow: hidden;
+  }
+  .log-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+  .log-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .log-badge {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .log-actions { margin-left: auto; display: flex; gap: 6px; }
+  .log-action-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3px 10px;
+    color: var(--text-dim);
+    font-size: 11px;
+    cursor: pointer;
+  }
+  .log-action-btn:hover { color: var(--text); }
+
+  .log-box {
+    flex: 1;
+    background: #090d13;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* Log colors */
+  .log-box .log-err  { color: var(--red); }
+  .log-box .log-ok   { color: var(--green); }
+  .log-box .log-warn { color: var(--yellow); }
+  .log-box .log-info { color: var(--cyan); }
+  .log-box .log-dim  { color: var(--text-dim); }
+  .log-box .log-acc  { color: var(--accent); font-weight: bold; }
+
+  /* ── Status bar ───────────────────────────────────────── */
+  .statusbar {
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    padding: 6px 20px;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+  }
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+  .status-dot.running {
+    background: var(--accent);
+    animation: pulse 1s infinite;
+  }
+  @keyframes pulse { 0%,100% {opacity:1} 50% {opacity:.4} }
+
+  /* ── File browser modal ───────────────────────────────── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    width: 560px;
+    max-height: 70vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .modal-title { font-size: 15px; font-weight: 600; }
+  .modal-close {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 4px;
+  }
+  .modal-path {
+    padding: 8px 16px;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg3);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .path-part {
+    color: var(--cyan);
+    cursor: pointer;
+  }
+  .path-part:hover { text-decoration: underline; }
+  .modal-list {
+    overflow-y: auto;
+    flex: 1;
+    padding: 8px 0;
+  }
+  .modal-item {
+    padding: 8px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    transition: background .1s;
+  }
+  .modal-item:hover { background: var(--bg3); }
+  .modal-item .icon { font-size: 16px; flex-shrink: 0; }
+  .modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .modal-selected {
+    flex: 1;
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+  }
+  .modal-confirm {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .modal-confirm:hover { background: var(--accent2); }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <span class="header-logo">⚙</span>
+  <span class="header-title">FiveM Deob</span>
+  <span class="header-sub">— Analisador de Scripts Obfuscados</span>
+  <span class="header-badge">v1.0.0 · Lua 5.4</span>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+  <!-- Controls -->
+  <div class="controls">
+
+    <div>
+      <div class="section-title">📁 Resource FiveM</div>
+      <div class="field">
+        <label>Pasta do Resource</label>
+        <div class="field-row">
+          <input type="text" id="resourceDir" placeholder="C:\FiveM\resources\MeuScript">
+          <button class="browse-btn" onclick="openBrowse('resourceDir', true)">📂</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Nome do Resource <span style="color:var(--text-dim)">(preencha se a pasta tiver nome diferente)</span></label>
+        <input type="text" id="resourceName" placeholder="Ex: MathStoreDemon-v3">
+      </div>
+      <div class="hint">
+        <b>Dica:</b> Selecione a pasta que contém o <code>fxmanifest.lua</code>.<br>
+        Se rodar de dentro da pasta (ex: <code>.</code>), preencha o nome do resource manualmente.
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">💾 Saída</div>
+      <div class="field">
+        <label>Pasta de Saída <span style="color:var(--text-dim)">(padrão: &lt;resource&gt;/deob_output)</span></label>
+        <div class="field-row">
+          <input type="text" id="outputDir" placeholder="Automático">
+          <button class="browse-btn" onclick="openBrowse('outputDir', true)">📂</button>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-title">⚙ Opções</div>
+      <div class="field">
+        <label>Max Ticks (iterações de thread, padrão: 3)</label>
+        <input type="number" id="maxTicks" value="3" min="1" max="20" style="width:80px">
+      </div>
+      <label class="checkbox-row">
+        <input type="checkbox" id="verbose">
+        Verbose — mostrar todos os logs de simulação
+      </label>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <button class="btn btn-primary" id="btnRun" onclick="runAnalysis()">
+        ▶ &nbsp; ANALISAR
+      </button>
+      <button class="btn btn-danger" id="btnStop" onclick="stopAnalysis()" disabled>
+        ⏹ &nbsp; PARAR
+      </button>
+      <button class="btn btn-secondary" id="btnOpen" onclick="openOutput()" disabled>
+        📁 &nbsp; ABRIR PASTA DE SAÍDA
+      </button>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+    </div>
+
+    <div style="flex:1;display:flex;flex-direction:column;gap:8px;min-height:0">
+      <div class="section-title">📊 Resumo</div>
+      <div class="summary" id="summary"><span class="d">Execute uma análise para ver o resumo aqui.</span></div>
+    </div>
+
+  </div>
+
+  <!-- Log panel -->
+  <div class="log-panel">
+    <div class="log-header">
+      <span class="log-title">📋 Log de Simulação</span>
+      <span class="log-badge" id="logBadge">0 linhas</span>
+      <div class="log-actions">
+        <button class="log-action-btn" onclick="clearLog()">Limpar</button>
+        <button class="log-action-btn" onclick="copyLog()">Copiar</button>
+        <button class="log-action-btn" onclick="scrollLogBottom()">↓ Fim</button>
+      </div>
+    </div>
+    <div class="log-box" id="logBox"></div>
+  </div>
+
+</div>
+
+<!-- Status bar -->
+<div class="statusbar">
+  <div class="status-dot" id="statusDot"></div>
+  <span id="statusText">Pronto.</span>
+</div>
+
+<!-- File browser modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📁 Selecionar Pasta</span>
+      <button class="modal-close" onclick="closeBrowse()">✕</button>
+    </div>
+    <div class="modal-path" id="modalPath"></div>
+    <div class="modal-list" id="modalList"></div>
+    <div class="modal-footer">
+      <input class="modal-selected" id="modalSelected" readonly>
+      <button class="modal-confirm" onclick="confirmBrowse()">Selecionar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── Estado ───────────────────────────────────────────────────────────────────
+let browseTarget  = null;   // input field ID
+let currentPath   = '';
+let isRunning     = false;
+let logText       = '';
+let logCount      = 0;
+let evtSource     = null;
+
+// ─── File Browser ─────────────────────────────────────────────────────────────
+function openBrowse(targetId, isDir) {
+  browseTarget = targetId;
+  const cur = document.getElementById(targetId).value || '';
+  loadDir(cur || null);
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeBrowse() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function loadDir(path) {
+  const url = '/api/list-dir' + (path ? '?path=' + encodeURIComponent(path) : '');
+  fetch(url).then(r => r.json()).then(data => {
+    if (data.error) {
+      loadDir(null);
+      return;
+    }
+    currentPath = data.path;
+    document.getElementById('modalSelected').value = data.path;
+
+    // Breadcrumbs
+    const parts = data.path.split(/[\/\\]/);
+    let built = '';
+    const pathDiv = document.getElementById('modalPath');
+    pathDiv.innerHTML = parts.map((p, i) => {
+      if (i === 0) {
+        built = p || '/';
+      } else {
+        built += (built.endsWith('/') || built.endsWith('\\') ? '' : '/') + p;
+      }
+      const snap = built;
+      return `<span class="path-part" onclick="loadDir('${snap.replace(/'/g,"\\'")}')">` +
+             (p || '🖥') + '</span> /';
+    }).join('');
+
+    // Lista
+    const list = document.getElementById('modalList');
+    list.innerHTML = data.entries.map(e => {
+      const icon = e.isDir ? '📁' : '📄';
+      const nm   = e.name;
+      const fullPath = nm === '..'
+        ? data.path.replace(/[\/\\][^\/\\]+$/, '') || '/'
+        : data.path.replace(/\/$/, '') + '/' + nm;
+      if (e.isDir) {
+        return `<div class="modal-item" onclick="loadDir('${fullPath.replace(/'/g,"\\'")}')">
+          <span class="icon">${icon}</span><span>${nm}</span></div>`;
+      }
+      return '';
+    }).join('');
+  });
+}
+
+function confirmBrowse() {
+  const sel = document.getElementById('modalSelected').value;
+  if (sel && browseTarget) {
+    document.getElementById(browseTarget).value = sel;
+    // Auto-fill resource name from folder name
+    if (browseTarget === 'resourceDir') {
+      const name = sel.split(/[\/\\]/).filter(Boolean).pop() || '';
+      if (name && name !== '.') {
+        document.getElementById('resourceName').value = name;
+      }
+      // Auto-fill output dir
+      if (!document.getElementById('outputDir').value) {
+        document.getElementById('outputDir').value = sel.replace(/[\/\\]$/, '') + '/deob_output';
+      }
+    }
+  }
+  closeBrowse();
+}
+
+// ─── Análise ──────────────────────────────────────────────────────────────────
+function runAnalysis() {
+  if (isRunning) return;
+
+  const resourceDir = document.getElementById('resourceDir').value.trim();
+  if (!resourceDir) {
+    alert('Selecione a pasta do resource primeiro!');
+    return;
+  }
+
+  clearLog();
+  setRunning(true);
+  setStatus('⏳ Simulando...');
+
+  const body = {
+    resourceDir:  resourceDir,
+    resourceName: document.getElementById('resourceName').value.trim(),
+    outputDir:    document.getElementById('outputDir').value.trim(),
+    maxTicks:     document.getElementById('maxTicks').value || '3',
+    verbose:      document.getElementById('verbose').checked,
+  };
+
+  fetch('/api/analyze', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }).then(r => r.json()).then(data => {
+    if (data.error) {
+      appendLog('ERRO: ' + data.error, 'err');
+      setRunning(false);
+      setStatus('✗ Erro: ' + data.error);
+      return;
+    }
+    // Inicia stream de logs
+    startLogStream();
+  }).catch(err => {
+    appendLog('ERRO de conexão: ' + err, 'err');
+    setRunning(false);
+    setStatus('✗ Erro de conexão');
+  });
+}
+
+function startLogStream() {
+  if (evtSource) { evtSource.close(); evtSource = null; }
+  evtSource = new EventSource('/api/logs');
+  evtSource.onmessage = function(e) {
+    const data = JSON.parse(e.data);
+    if (data.done) {
+      evtSource.close(); evtSource = null;
+      const ok = data.result && data.result.ok;
+      setRunning(false);
+      if (ok) {
+        setStatus('✓ Análise concluída!');
+        document.getElementById('btnOpen').disabled = false;
+        buildSummary();
+      } else {
+        setStatus('✗ Análise encerrada com erro.');
+      }
+      return;
+    }
+    if (data.line !== undefined) {
+      const line = data.line;
+      let cls = 'white';
+      const l = line.toLowerCase();
+      if (l.includes('erro') || l.includes('error') || l.includes('✗')) cls = 'err';
+      else if (l.includes('✓') || l.includes('concluíd') || l.includes('sucesso') || l.includes('ok')) cls = 'ok';
+      else if (l.includes('⚠') || l.includes('warn') || l.includes('aviso')) cls = 'warn';
+      else if (l.startsWith('  [')) cls = 'dim';
+      else if (l.includes('===') || l.includes('──') || l.includes('extração')) cls = 'acc';
+      else if (l.includes('tempo total') || l.includes('ms')) cls = 'info';
+      appendLog(line, cls);
+    }
+  };
+  evtSource.onerror = function() {
+    if (evtSource) { evtSource.close(); evtSource = null; }
+    setRunning(false);
+    setStatus('✗ Conexão perdida');
+  };
+}
+
+function stopAnalysis() {
+  fetch('/api/stop', { method: 'POST' });
+  setRunning(false);
+  setStatus('⏹ Interrompido.');
+}
+
+function openOutput() {
+  fetch('/api/open-output', { method: 'POST' })
+    .then(r => r.json())
+    .then(d => {
+      if (d.error) setStatus('Erro ao abrir pasta: ' + d.error);
+      else setStatus('📁 Pasta de saída aberta.');
+    });
+}
+
+// ─── Resumo ───────────────────────────────────────────────────────────────────
+function buildSummary() {
+  const txt = logText;
+  const find = (re, def) => { const m = txt.match(re); return m ? m[1] : def; };
+
+  const resource  = find(/EXTRAÇÃO CONCLUÍDA:\s*(.+?)(?:\n|\r)/, '?');
+  const tempo     = find(/Tempo total:\s*([\d.,]+ ms)/, '?');
+  const e_count   = find(/Tabela E.*?:\s*(\d+)/, '?');
+  const framework = find(/Framework:\s*(\S+)/, '');
+  const sv_ev     = find(/── SERVIDOR[\s\S]*?Eventos registrados:\s*(\d+)/, '?');
+  const sv_cmd    = find(/── SERVIDOR[\s\S]*?Comandos registrados:\s*(\d+)/, '?');
+  const cl_ev     = find(/── CLIENTE[\s\S]*?Eventos registrados:\s*(\d+)/, '?');
+  const nui       = find(/NUI Callbacks:\s*(\d+)/, '0');
+  const kb        = find(/Keybinds:\s*(\d+)/, '0');
+  const anims     = find(/AnimDicts usados:\s*(\d+)/, '0');
+  const models    = find(/Modelos.*?:\s*(\d+)/, '0');
+  const bones     = find(/Bones usados:\s*(\d+)/, '0');
+  const server_ev = find(/TriggerServerEvent calls:\s*(\d+)/, '0');
+
+  const outDir = document.getElementById('outputDir').value || '(resource)/deob_output';
+
+  document.getElementById('summary').innerHTML =
+    `<span class="h">📦 ${resource}</span>\n` +
+    `<span class="d">⏱  Tempo: </span><span class="v">${tempo}</span>\n\n` +
+    `<span class="d">🔑 Tabela E: </span><span class="v">${e_count} eventos</span>\n` +
+    (framework ? `<span class="d">⚙  Framework: </span><span class="v">${framework}</span>\n` : '') +
+    `\n<span class="h">── SERVIDOR ─────────────────</span>\n` +
+    `<span class="d">   Eventos:   </span><span class="v">${sv_ev}</span>\n` +
+    `<span class="d">   Comandos:  </span><span class="v">${sv_cmd}</span>\n` +
+    `\n<span class="h">── CLIENTE ──────────────────</span>\n` +
+    `<span class="d">   Eventos:   </span><span class="v">${cl_ev}</span>\n` +
+    `<span class="d">   NUI:       </span><span class="v">${nui}</span>\n` +
+    `<span class="d">   Keybinds:  </span><span class="v">${kb}</span>\n` +
+    `<span class="d">   AnimDicts: </span><span class="v">${anims}</span>\n` +
+    `<span class="d">   Modelos:   </span><span class="v">${models}</span>\n` +
+    `<span class="d">   Bones:     </span><span class="v">${bones}</span>\n` +
+    `<span class="d">   → Servidor:</span><span class="v">${server_ev} calls</span>\n` +
+    `\n<span class="h">── ARQUIVOS GERADOS ─────────</span>\n` +
+    `<span class="d">   📄 ANALYSIS_REPORT.md\n` +
+    `   📄 shared/events_map.lua\n` +
+    `   📄 shared/config_extracted.lua\n` +
+    `   📄 server/main_reconstructed.lua\n` +
+    `   📄 client/main_reconstructed.lua\n\n` +
+    `   </span><span class="k">${outDir}</span>`;
+}
+
+// ─── Helpers de UI ────────────────────────────────────────────────────────────
+function appendLog(line, cls) {
+  const box = document.getElementById('logBox');
+  const span = document.createElement('span');
+  span.className = 'log-' + (cls || 'white');
+  span.textContent = line + '\n';
+  box.appendChild(span);
+  box.scrollTop = box.scrollHeight;
+  logText += line + '\n';
+  logCount++;
+  document.getElementById('logBadge').textContent = logCount + ' linhas';
+}
+
+function clearLog() {
+  document.getElementById('logBox').innerHTML = '';
+  logText = ''; logCount = 0;
+  document.getElementById('logBadge').textContent = '0 linhas';
+}
+
+function copyLog() {
+  navigator.clipboard.writeText(logText).then(() => setStatus('Log copiado!'));
+}
+
+function scrollLogBottom() {
+  const box = document.getElementById('logBox');
+  box.scrollTop = box.scrollHeight;
+}
+
+function setRunning(val) {
+  isRunning = val;
+  document.getElementById('btnRun').disabled  = val;
+  document.getElementById('btnStop').disabled = !val;
+  const dot = document.getElementById('statusDot');
+  if (val) {
+    dot.classList.add('running');
+    document.getElementById('progressFill').classList.add('indeterminate');
+  } else {
+    dot.classList.remove('running');
+    document.getElementById('progressFill').classList.remove('indeterminate');
+  }
+}
+
+function setStatus(text) {
+  document.getElementById('statusText').textContent = text;
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+window.onload = function() {
+  setStatus('Pronto. Selecione um resource e clique em Analisar.');
+};
+</script>
+</body>
+</html>
