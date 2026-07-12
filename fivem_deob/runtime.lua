@@ -75,12 +75,28 @@ function RT.new_env(side, opts)
         convars_read    = {},   -- GetConvar calls
         exports_called  = {},   -- exports.resource:fn() calls
         state_bag_handlers = {},
+        -- ── Per-handler call tracking (para reconstrução real) ─────
+        handler_calls   = {},   -- [eventName] = { natives=[], triggers=[], models=[], anims=[], entities_created=0, ... }
     }
+
+    -- ── Contexto do handler em execução (para rastrear chamadas) ────
+    local _current_handler = nil  -- nome do evento sendo executado
+
+    local function track(category, value)
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc[category] = hc[category] or {}
+                table.insert(hc[category], value)
+            end
+        end
+    end
 
     -- ── Helpers internos ────────────────────────────────────────────
     local function native(name, ...)
         data.natives_called[name] = (data.natives_called[name] or 0) + 1
         log_fn("NATIVE", name.."("..ser({...},1)..")")
+        track("natives", { name=name, args={...} })
     end
 
     -- ── Constrói env ────────────────────────────────────────────────
@@ -163,8 +179,36 @@ function RT.new_env(side, opts)
         if not data.event_handlers[eventName] then
             data.event_handlers[eventName] = {}
             data.events[#data.events+1] = { name=eventName, args={} }
+            -- Inicializa rastreamento por handler
+            data.handler_calls[eventName] = {
+                natives         = {},
+                triggers_server = {},
+                triggers_client = {},
+                models          = {},
+                anims           = {},
+                anims_played    = {},
+                entities_created = 0,
+                entities_deleted = 0,
+                attach_calls    = {},
+                commands_fired  = {},
+                http_calls      = {},
+                state_set       = {},
+                nui_messages    = {},
+                convars         = {},
+            }
         end
-        table.insert(data.event_handlers[eventName], handler)
+        -- Wraps handler para rastrear chamadas durante execução
+        local orig = handler
+        local wrapped = function(...)
+            local prev = _current_handler
+            _current_handler = eventName
+            local ok, err = pcall(orig, ...)
+            _current_handler = prev
+            if not ok then
+                log_fn("Handler.ERROR", '"'..eventName..'" '..tostring(err))
+            end
+        end
+        table.insert(data.event_handlers[eventName], wrapped)
     end
 
     env.RegisterNetEvent = function(eventName, handler)
@@ -194,6 +238,7 @@ function RT.new_env(side, opts)
         local a = {...}
         log_fn("TriggerServerEvent", '"'..eventName..'" args='..ser(a,2))
         data.server_events[#data.server_events+1] = { name=eventName, args=a }
+        track("triggers_server", { name=eventName, args=a })
     end
 
     env.TriggerClientEvent = function(eventName, target, ...)
@@ -201,16 +246,25 @@ function RT.new_env(side, opts)
         local tgt = target==-1 and "ALL" or tostring(target)
         log_fn("TriggerClientEvent", '"'..eventName..'" tgt='..tgt)
         data.client_events[#data.client_events+1] = { name=eventName, target=tgt, args=a }
+        track("triggers_client", { name=eventName, target=tgt, args=a })
         fire_handlers(eventName, a)
     end
 
     env.TriggerLatentClientEvent = function(eventName, target, bps, ...)
         log_fn("TriggerLatentClientEvent", '"'..eventName..'"')
+        track("triggers_client", { name=eventName, target=tostring(target), latent=true })
     end
 
     -- ── NUI ─────────────────────────────────────────────────────────
     env.SendNuiMessage = function(json_str)
         log_fn("SendNuiMessage", tostring(json_str))
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.nui_messages = hc.nui_messages or {}
+                table.insert(hc.nui_messages, tostring(json_str))
+            end
+        end
     end
     env.RegisterNuiCallback = function(name, handler)
         log_fn("RegisterNuiCallback", '"'..name..'"')
@@ -226,9 +280,15 @@ function RT.new_env(side, opts)
     -- ── HTTP ────────────────────────────────────────────────────────
     env.PerformHttpRequest = function(url, cb, method, body, headers)
         log_fn("PerformHttpRequest", (method or "GET").." "..tostring(url))
-        data.http_requests[#data.http_requests+1] = {
-            url=url, method=method or "GET", body=body
-        }
+        local req = { url=url, method=method or "GET", body=body }
+        data.http_requests[#data.http_requests+1] = req
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.http_calls = hc.http_calls or {}
+                table.insert(hc.http_calls, req)
+            end
+        end
         if cb then
             local fake = '{"status":"ok","authorized":true}'
             log_fn("HTTP.RESPONSE", "200 "..fake)
@@ -301,10 +361,20 @@ function RT.new_env(side, opts)
     env.CreateObject = function(model, x, y, z, ...)
         _eid = _eid + 1
         log_fn("CreateObject", "model="..ser(model,0).." eid=".._eid)
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then hc.entities_created = (hc.entities_created or 0) + 1 end
+        end
         return _eid
     end
     env.CreateObjectNoOffset = env.CreateObject
-    env.DeleteEntity = function(e) log_fn("DeleteEntity", "eid="..tostring(e)) end
+    env.DeleteEntity = function(e)
+        log_fn("DeleteEntity", "eid="..tostring(e))
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then hc.entities_deleted = (hc.entities_deleted or 0) + 1 end
+        end
+    end
     env.DeleteObject = env.DeleteEntity
     env.DoesEntityExist = function(e) return (e or 0) > 0 end
     env.IsEntityAttached = function(e) return false end
@@ -317,7 +387,10 @@ function RT.new_env(side, opts)
     env.SetEntityLodDist = function(e,d) end
     env.PlaceObjectOnGroundProperly = function(e) end
     env.SetEntityCoordsNoOffset = function(e,...) end
-    env.SetEntityCoords = function(e,x,y,z,...) native("SetEntityCoords",e,x,y,z) end
+    env.SetEntityCoords = function(e,x,y,z,...)
+        native("SetEntityCoords",e,x,y,z)
+        track("natives", { name="SetEntityCoords", args={e,x,y,z} })
+    end
     env.GetOffsetFromEntityInWorldCoords = function(e,x,y,z) return x or 0,y or 0,z or 0 end
     env.IsEntityInAir = function(e) return false end
     env.IsEntityVisible = function(e) return true end
@@ -347,6 +420,13 @@ function RT.new_env(side, opts)
             offset={ox or 0,oy or 0,oz or 0}, rot={rx or 0,ry or 0,rz or 0}
         }
         data.attach_calls[#data.attach_calls+1] = call
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.attach_calls = hc.attach_calls or {}
+                table.insert(hc.attach_calls, call)
+            end
+        end
         log_fn("AttachEntityToEntity",
             string.format("eid=%d to=%d bone=%d off=(%.2f,%.2f,%.2f) rot=(%.2f,%.2f,%.2f)",
             entity or 0, entityTo or 0, boneIndex or 0,
@@ -378,6 +458,7 @@ function RT.new_env(side, opts)
     env.RequestModel = function(model)
         data.models[ser(model,0)] = true
         log_fn("RequestModel", ser(model,0))
+        track("models", ser(model,0))
     end
     env.HasModelLoaded = function(m) return true end
     env.IsModelValid = function(m) return true end
@@ -386,6 +467,7 @@ function RT.new_env(side, opts)
         if type(model)=="string" then
             data.models[model] = true
             log_fn("GetHashKey", '"'..model..'"')
+            track("models", model)
             local h=0
             for i=1,#model do h=(h*31+string.byte(model,i))&0xFFFFFFFF end
             return h
@@ -397,6 +479,15 @@ function RT.new_env(side, opts)
     env.RequestAnimDict = function(dict)
         data.anim_dicts[dict] = true
         log_fn("RequestAnimDict", '"'..tostring(dict)..'"')
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.anims = hc.anims or {}
+                if not (function() for _,v in ipairs(hc.anims) do if v==dict then return true end end end)() then
+                    table.insert(hc.anims, dict)
+                end
+            end
+        end
     end
     env.HasAnimDictLoaded = function(d) return true end
     env.RemoveAnimDict = function(d)
@@ -407,19 +498,43 @@ function RT.new_env(side, opts)
         log_fn("RemoveAnimDict", '"'..tostring(d)..'"')
     end
     env.TaskPlayAnim = function(ped, animDict, animName, blendIn, blendOut, duration, flag, ...)
-        data.anim_plays[#data.anim_plays+1] = {
+        local play = {
             dict=animDict, clip=animName, ped=ped, flag=flag, duration=duration
         }
+        data.anim_plays[#data.anim_plays+1] = play
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.anims_played = hc.anims_played or {}
+                table.insert(hc.anims_played, play)
+            end
+        end
         log_fn("TaskPlayAnim",
             string.format('ped=%d dict="%s" clip="%s" dur=%d flag=%d',
             ped or 0, tostring(animDict), tostring(animName), duration or -1, flag or 0))
     end
     env.TaskPlayAnimAdvanced = function(ped, animDict, animName, ...)
-        data.anim_plays[#data.anim_plays+1] = { dict=animDict, clip=animName, ped=ped }
+        local play = { dict=animDict, clip=animName, ped=ped }
+        data.anim_plays[#data.anim_plays+1] = play
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.anims_played = hc.anims_played or {}
+                table.insert(hc.anims_played, play)
+            end
+        end
         log_fn("TaskPlayAnimAdvanced", string.format('ped=%d dict="%s" clip="%s"', ped or 0, tostring(animDict), tostring(animName)))
     end
     env.PlayAnimOnEntity = function(entity, animDict, animName, ...)
-        data.anim_plays[#data.anim_plays+1] = { dict=animDict, clip=animName, entity=entity }
+        local play = { dict=animDict, clip=animName, entity=entity }
+        data.anim_plays[#data.anim_plays+1] = play
+        if _current_handler then
+            local hc = data.handler_calls[_current_handler]
+            if hc then
+                hc.anims_played = hc.anims_played or {}
+                table.insert(hc.anims_played, play)
+            end
+        end
         log_fn("PlayAnimOnEntity", string.format('eid=%d dict="%s" clip="%s"', entity or 0, tostring(animDict), tostring(animName)))
     end
     env.StopAnimTask = function(ped, animDict, animName, ...)
