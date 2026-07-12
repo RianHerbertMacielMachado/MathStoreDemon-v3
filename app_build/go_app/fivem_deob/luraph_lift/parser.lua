@@ -40,11 +40,11 @@ function M.is_luraph(src)
   if src:find("while true do local Z=") then return true end
   -- v2 detection: repeat local J=Z[V]  (any single-letter variable name)
   if src:find("repeat local %a=Z%[V%]") then return true end
-  -- v2/v3 top-level method table signature: return({tK=function... or return({z=function
-  if src:find("^%s*return%(%{%a%a=function") then return true end
-  if src:find("^%s*return%({%a%a=function") then return true end
-  if src:find("^%s*return%(%{z=function") then return true end
-  if src:find("^%s*return%({z=function") then return true end
+  -- v2 top-level method table: return({<key>=function...
+  -- Keys observed: sP, tK, vW (2 alpha), z (1 alpha), m7 (alpha+digit), IV (2 alpha)
+  -- Pattern: ^whitespace return({ <alpha><wordchars*>=function
+  if src:find("^%s*return%(%{%a%w*=function") then return true end
+  if src:find("^%s*return%({%a%w*=function")  then return true end
   return false
 end
 
@@ -55,10 +55,8 @@ function M.luraph_version(src)
     return M.V1
   end
   if src:find("repeat local %a=Z%[V%]")
-  or src:find("^%s*return%(%{z=function")
-  or src:find("^%s*return%({z=function")
-  or src:find("^%s*return%(%{%a%a=function")
-  or src:find("^%s*return%({%a%a=function") then
+  or src:find("^%s*return%(%{%a%w*=function")
+  or src:find("^%s*return%({%a%w*=function") then
     return M.V2
   end
   return nil

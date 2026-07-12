@@ -24,7 +24,8 @@
 
 -- ── Adiciona o diretório pai ao path do Lua ─────────────────────────
 -- Necessário para que require("fivem_deob.X") funcione de qualquer dir
-local script_path = debug.getinfo(1, "S").source:sub(2)  -- remove '@'
+-- Normaliza \ → / para compatibilidade Windows/Unix
+local script_path = debug.getinfo(1, "S").source:sub(2):gsub("\\", "/")  -- remove '@', normalize
 local script_dir  = script_path:match("^(.+)/[^/]+$") or "."
 local parent_dir  = script_dir:match("^(.+)/[^/]+$") or script_dir
 
@@ -441,7 +442,12 @@ local function main()
     -- Luraph lift é opcional — não aborta se não estiver disponível
     local LLIFT = nil
     local ok_ll, ll_mod = pcall(require, "fivem_deob.luraph_lift")
-    if ok_ll then LLIFT = ll_mod end
+    if ok_ll then
+        LLIFT = ll_mod
+        print(C.dim("  [luraph_lift] módulo carregado ✓"))
+    else
+        print(C.dim("  [luraph_lift] módulo não disponível — " .. tostring(ll_mod):sub(1,80)))
+    end
 
     -- ── Fase 1: Extração ──────────────────────────────────────────
     print(C.bold("  Iniciando simulação..."))
@@ -507,19 +513,31 @@ local function main()
     -- ── Fase 4: Luraph VM Deobfuscation ──────────────────────────────
     -- Detecta arquivos Luraph entre todos os .lua do resource e
     -- gera código Lua legível em deob_output/luraph_lift/<arquivo>.lua
-    if LLIFT and result.all_files and #result.all_files > 0 then
+    local n_all_files = result.all_files and #result.all_files or 0
+    if not LLIFT then
+        -- mensagem já impressa acima
+    elseif n_all_files == 0 then
+        print(C.dim("  [luraph_lift] nenhum .lua encontrado no resource — pulando"))
+    else
         local luraph_dir = opts.output_dir .. "/luraph_lift"
         local luraph_count = 0
         local luraph_files = {}
 
         -- Pré-detecta quais arquivos são Luraph
         local PARSER = require("fivem_deob.luraph_lift.parser")
+        print(C.dim(string.format("  [luraph_lift] escaneando %d arquivos...", n_all_files)))
         for _, rel in ipairs(result.all_files) do
+            -- Normaliza separadores: Windows usa \ mas concatenamos com /
             local abs_path = opts.resource_dir .. "/" .. rel
+            abs_path = abs_path:gsub("\\\\", "/"):gsub("//", "/")
             local src, _ = PARSER.read_source(abs_path)
             if src and PARSER.is_luraph(src) then
                 luraph_files[#luraph_files+1] = { rel=rel, abs=abs_path }
             end
+        end
+
+        if #luraph_files == 0 then
+            print(C.dim(string.format("  [luraph_lift] 0/%d arquivos Luraph detectados", n_all_files)))
         end
 
         if #luraph_files > 0 then
