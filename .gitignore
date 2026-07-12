@@ -1,1 +1,7 @@
 deob_output/
+app_build/dist/
+app_build/build_work/
+app_build/fivem_deob/
+app_build/fivem_deob_app.spec
+app_build/fivem_deob_app.py
+app_build/lua54.exe
