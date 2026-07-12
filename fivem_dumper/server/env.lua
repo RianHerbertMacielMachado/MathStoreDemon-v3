@@ -230,10 +230,13 @@ function ENV.new(resource_name, log_fn)
         CreateThread = env.CreateThread,
         Wait         = env.Wait,
         Trace        = function(msg) log_fn("Citizen.Trace", tostring(msg)) end,
-        SetTimeout   = function(ms, fn)
-            -- Executa imediatamente para capturar o conteúdo
-            local ok, err = pcall(fn)
-            if not ok then log_fn("SetTimeout.ERROR", tostring(err)) end
+        SetTimeout   = function(a, b)
+            -- Aceita AMBAS as assinaturas: SetTimeout(ms,fn) e SetTimeout(fn,ms)
+            local fn = type(a) == "function" and a or (type(b) == "function" and b)
+            if fn then
+                local ok, err = pcall(fn)
+                if not ok then log_fn("SetTimeout.ERROR", tostring(err)) end
+            end
         end,
     }
 
@@ -913,8 +916,47 @@ function ENV.load_file(path, env, label)
     end
     if not fn then return false, "compile: "..tostring(cerr) end
 
-    local ok, rerr = pcall(fn)
-    if not ok then return false, "runtime: "..tostring(rerr) end
+    -- ── Executa dentro de uma coroutine com budget hook ──────────────
+    -- CRÍTICO: NÃO usar pcall(fn) direto na thread principal.
+    -- Se o script tiver loop while-true + Wait(0) no nível de módulo,
+    -- Wait() fora de coroutine é no-op → loop infinito trava o servidor.
+    -- Executar como coroutine: Wait() faz yield e o budget hook mata
+    -- loops que não cedem controle.
+    local MAX_TOP_INSTRS = 200000  -- instruções máximas para o top-level
+    local co = coroutine.create(fn)
+
+    local instr_count = 0
+    local budget_killed = false
+    local function top_budget()
+        instr_count = instr_count + 1
+        if instr_count >= MAX_TOP_INSTRS then
+            budget_killed = true
+            error("__budget__", 2)
+        end
+    end
+    pcall(debug.sethook, co, top_budget, "", 1000)
+
+    -- Pump: resume até dead, yield (Wait) ou budget
+    local MAX_TOP_YIELDS = 30  -- máximo de Wait() yields no top-level
+    local yields = 0
+    local last_err
+    while coroutine.status(co) ~= "dead" do
+        local ok, val = coroutine.resume(co)
+        if not ok then
+            pcall(debug.sethook, co, nil)
+            if budget_killed or (type(val)=="string" and val:find("__budget__")) then
+                return false, "top-level busy-loop (>200k instrs): "..label
+            end
+            return false, "runtime: "..tostring(val)
+        end
+        -- yielded via Wait(ms) — conta e continua
+        yields = yields + 1
+        if yields > MAX_TOP_YIELDS then
+            pcall(debug.sethook, co, nil)
+            return false, "top-level loop (>"..MAX_TOP_YIELDS.." yields): "..label
+        end
+    end
+    pcall(debug.sethook, co, nil)
     return true
 end
 

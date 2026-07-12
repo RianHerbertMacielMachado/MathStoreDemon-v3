@@ -538,9 +538,12 @@ AddEventHandler("onResourceStart", function(started_resource)
     if _analysed[started_resource] then return end
     _analysed[started_resource] = true
 
-    -- Pequeno delay para garantir que o resource terminou de inicializar
-    -- NOTA: SetTimeout no FiveM tem ordem INVERTIDA: SetTimeout(fn, ms)
-    SetTimeout(function()
+    -- Pequeno delay para garantir que o resource terminou de inicializar.
+    -- NÃO usa SetTimeout — a assinatura varia entre versões do FiveM:
+    --   Antigas: SetTimeout(ms, fn)   Novas: SetTimeout(fn, ms)
+    -- CreateThread+Wait funciona em TODAS as versões.
+    CreateThread(function()
+        Wait(500)
         local state = GetResourceState(started_resource)
         if state ~= "started" then
             print(string.format("^3[Dumper] Auto-dump: '%s' não está mais started (state=%s), pulando.^7",
@@ -549,7 +552,7 @@ AddEventHandler("onResourceStart", function(started_resource)
         end
         print(string.format("^5[Dumper] Auto-dump: ^3%s^7 iniciado — enfileirando...", started_resource))
         dump_async(started_resource, false, -1)
-    end, 500)
+    end)
 end)
 
 -----------------------------------------------------------------------
