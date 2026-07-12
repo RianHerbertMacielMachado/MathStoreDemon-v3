@@ -438,6 +438,11 @@ local function main()
         os.exit(1)
     end
 
+    -- Luraph lift é opcional — não aborta se não estiver disponível
+    local LLIFT = nil
+    local ok_ll, ll_mod = pcall(require, "fivem_deob.luraph_lift")
+    if ok_ll then LLIFT = ll_mod end
+
     -- ── Fase 1: Extração ──────────────────────────────────────────
     print(C.bold("  Iniciando simulação..."))
     if not opts.verbose then
@@ -497,6 +502,68 @@ local function main()
     else
         print(C.dim("  [--no-reconstruct] Geração de arquivos pulada."))
         print("")
+    end
+
+    -- ── Fase 4: Luraph VM Deobfuscation ──────────────────────────────
+    -- Detecta arquivos Luraph entre todos os .lua do resource e
+    -- gera código Lua legível em deob_output/luraph_lift/<arquivo>.lua
+    if LLIFT and result.all_files and #result.all_files > 0 then
+        local luraph_dir = opts.output_dir .. "/luraph_lift"
+        local luraph_count = 0
+        local luraph_files = {}
+
+        -- Pré-detecta quais arquivos são Luraph
+        local PARSER = require("fivem_deob.luraph_lift.parser")
+        for _, rel in ipairs(result.all_files) do
+            local abs_path = opts.resource_dir .. "/" .. rel
+            local src, _ = PARSER.read_source(abs_path)
+            if src and PARSER.is_luraph(src) then
+                luraph_files[#luraph_files+1] = { rel=rel, abs=abs_path }
+            end
+        end
+
+        if #luraph_files > 0 then
+            print(C.bold("  ── LURAPH DEOBFUSCATION ───────────────────"))
+            print(string.format("  %s arquivos Luraph detectados — deobfuscando...",
+                C.yellow(tostring(#luraph_files))))
+            print("")
+
+            -- Cria diretório de saída (portável: tenta mkdir -p no Unix, md no Windows)
+            local IS_WIN = package.config:sub(1,1) == "\\"
+            if IS_WIN then
+                os.execute('md "' .. luraph_dir:gsub("/","\\") .. '" 2>nul')
+            else
+                os.execute('mkdir -p "' .. luraph_dir .. '"')
+            end
+
+            for idx, entry in ipairs(luraph_files) do
+                -- Achata a estrutura de pastas: client/main.lua → client_main_deob.lua
+                local out_flat = entry.rel:gsub("[/\\]", "_"):gsub("%.lua$", "_deob.lua")
+                local out_path = luraph_dir .. "/" .. out_flat
+
+                io.write(string.format("  [%d/%d] %s ... ", idx, #luraph_files,
+                    C.cyan(entry.rel)))
+                io.flush()
+
+                local ok_deob, deob_err = pcall(function()
+                    LLIFT.deobfuscate(entry.abs, out_path, { verbose = false })
+                end)
+
+                if ok_deob then
+                    print(C.green("OK"))
+                    luraph_count = luraph_count + 1
+                    files_written[#files_written+1] = out_path
+                else
+                    print(C.red("FALHOU") .. C.dim(" — " .. tostring(deob_err)))
+                end
+            end
+
+            print("")
+            print(string.format("  %s/%s arquivos deobfuscados com sucesso.",
+                C.yellow(tostring(luraph_count)), tostring(#luraph_files)))
+            print(C.dim("  Arquivos legíveis em: " .. luraph_dir))
+            print("")
+        end
     end
 
     -- ── Mensagem final ────────────────────────────────────────────
