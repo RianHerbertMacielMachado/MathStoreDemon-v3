@@ -230,10 +230,13 @@ function ENV.new(resource_name, log_fn)
         CreateThread = env.CreateThread,
         Wait         = env.Wait,
         Trace        = function(msg) log_fn("Citizen.Trace", tostring(msg)) end,
-        SetTimeout   = function(ms, fn)
-            -- Executa imediatamente para capturar o conteúdo
-            local ok, err = pcall(fn)
-            if not ok then log_fn("SetTimeout.ERROR", tostring(err)) end
+        SetTimeout   = function(a, b)
+            -- Aceita AMBAS as assinaturas: SetTimeout(ms,fn) e SetTimeout(fn,ms)
+            local fn = type(a) == "function" and a or (type(b) == "function" and b)
+            if fn then
+                local ok, err = pcall(fn)
+                if not ok then log_fn("SetTimeout.ERROR", tostring(err)) end
+            end
         end,
     }
 
