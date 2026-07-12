@@ -1,0 +1,15 @@
+-----------------------------------------------------------------------
+-- fivem_dumper/server/collector.lua  — v3.0  (arquivo removido)
+--
+-- O collector foi REMOVIDO na v3.0.
+--
+-- Motivo: GetInvokingResource() retorna nil no FiveM servidor durante
+-- a inicialização de outros resources, então o monkey-patch nunca
+-- conseguia identificar qual resource estava chamando as APIs.
+-- Resultado: 0 eventos, 0 net, 0 cmds para todos os resources.
+--
+-- A v3.0 usa uma abordagem completamente diferente:
+--   LoadResourceFile → load() → string.dump()
+-- Não requer monkey-patch nem GetInvokingResource.
+-----------------------------------------------------------------------
+print("^5[Dumper]^7 v3.0 — pipeline de deobfuscação nativa (LoadResourceFile → load → string.dump)")

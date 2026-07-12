@@ -2,23 +2,24 @@ fx_version 'cerulean'
 game 'gta5'
 
 name        'FiveM Dumper'
-description 'Dynamic analysis & deobfuscation of any FiveM resource — runs inside the real FiveM/CFX runtime.'
-version     '1.0.0'
+description 'Deobfuscates any resource using FiveM LuaJIT: LoadResourceFile -> load() -> string.dump(). Works with Luraph.'
+version     '3.0.0'
 author      'fivem_dumper'
 
--- Shared data structures (event names, config keys, etc.)
 shared_scripts {
     'shared/constants.lua',
 }
 
--- Server-side: loader + instrumentation + writer
+-- ORDEM IMPORTA:
+--   1. collector.lua  — monkey-patches as APIs globais PRIMEIRO
+--   2. writer.lua     — gera os arquivos de output
+--   3. main.lua       — comandos /dump, /dumpall, auto-dump
 server_scripts {
-    'server/env.lua',
+    'server/collector.lua',
     'server/writer.lua',
     'server/main.lua',
 }
 
--- Client-side: intercepts client calls triggered by server during dump
 client_scripts {
     'client/main.lua',
 }
