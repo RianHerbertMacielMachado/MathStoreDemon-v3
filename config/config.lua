@@ -117,3 +117,44 @@ end
 Config.Cooldowns = {
 }
 
+-----------------------------------------------------------------------
+-- Debug System
+-- Ativa logs detalhados de TODOS os eventos, NUI callbacks, HTTP,
+-- threads e estado global — útil para entender o que as partes
+-- obfuscadas (bridge/shared, client/main, client/bones, etc.) fazem.
+--
+-- ⚠️  DESATIVE em produção (Enabled = false) — gera muito log!
+-----------------------------------------------------------------------
+
+Config.Debug = {
+    -- Liga/desliga todo o sistema de debug
+    Enabled = false,
+
+    -- Filtra por nome parcial de evento ('' = mostra tudo)
+    -- Exemplo: 'demon' mostra só eventos que contenham 'demon' no nome
+    Filter = '',
+
+    -- Mostra mensagens NUI (SendNuiMessage, RegisterNuiCallback)
+    ShowNui = true,
+
+    -- Mostra threads criadas pelos scripts (CreateThread)
+    ShowThreads = true,
+
+    -- Mostra snapshot periódico de PlayerWings/PlayerTails/globals
+    ShowLocals = true,
+
+    -- Intervalo do snapshot automático (ms) — padrão 10 segundos
+    WatchInterval = 10000,
+
+    -- Mostra chamadas HTTP (PerformHttpRequest) — auth, webhooks, etc.
+    ShowHttp = true,
+
+    -- Hookeia nativas FiveM (CreateObject, AttachEntityToEntity,
+    -- RequestModel, TaskPlayAnim) para revelar o que o obfuscado spawna
+    ShowNativeHooks = true,
+
+    -- Varre _G a cada ciclo para detectar globals novas criadas
+    -- pelos scripts obfuscados
+    WatchNewGlobals = false,
+}
+
