@@ -1,0 +1,110 @@
+[SERVER][LOADING] bridge/oxlib_loader.lua
+[SERVER][LOADED_OK] bridge/oxlib_loader.lua
+[SERVER][LOADING] bridge/vrp_loader.lua
+[SERVER][LOADED_OK] bridge/vrp_loader.lua
+[SERVER][LOADING] config/config.lua
+[SERVER][LOADED_OK] config/config.lua
+[SERVER][LOADING] config/config_internal.lua
+[SERVER][LOADED_OK] config/config_internal.lua
+[SERVER][LOADING] config/locales.lua
+[SERVER][LOADED_OK] config/locales.lua
+[SERVER][LOADING] config/permissions.lua
+[SERVER][LOADED_OK] config/permissions.lua
+[SERVER][LOADING] bridge/shared.lua
+[SERVER][LOADED_OK] bridge/shared.lua
+[SERVER][LOADING] server/core.lua
+[SERVER][AddEventHandler] "playerDropped"
+[SERVER][AddEventHandler] "onResourceStart"
+[SERVER][LOADED_OK] server/core.lua
+[SERVER][LOADING] server/debug.lua
+[SERVER][LOADED_OK] server/debug.lua
+[SERVER][LOADING] bridge/server.lua
+[SERVER][CreateThread] #1 registered
+[SERVER][print] ^3[MathStoreDemon-v3] bridge/server.lua carregado (framework: vrp).^0
+[SERVER][LOADED_OK] bridge/server.lua
+[SERVER][LOADING] server/main.lua
+[SERVER][RegisterCommand] "/asasdm"  restricted=false
+[SERVER][RegisterCommand] "/removerdm"  restricted=false
+[SERVER][RegisterCommand] "/asasdmtg"  restricted=false
+[SERVER][RegisterCommand] "/asasvoardm"  restricted=false
+[SERVER][RegisterCommand] "/asascordm"  restricted=false
+[SERVER][RegisterCommand] "/asaslimpardm"  restricted=false
+[SERVER][RegisterCommand] "/asaslimpar2dm"  restricted=false
+[SERVER][RegisterCommand] "/abrirdm"  restricted=false
+[SERVER][RegisterCommand] "/fechardm"  restricted=false
+[SERVER][RegisterCommand] "/baterdm"  restricted=false
+[SERVER][RegisterCommand] "/caudadm"  restricted=false
+[SERVER][RegisterCommand] "/removercd"  restricted=false
+[SERVER][RegisterCommand] "/caudacordm"  restricted=false
+[SERVER][RegisterCommand] "/caudabt"  restricted=false
+[SERVER][RegisterCommand] "/caudacl"  restricted=false
+[SERVER][RegisterCommand] "/caudaop"  restricted=false
+[SERVER][RegisterCommand] "/demonhud"  restricted=false
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:reqToggleWing"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:reqToggleWing"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:reqToggleFly"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:reqToggleFly"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:reqOpenHud"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:reqOpenHud"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:hudAction"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:hudAction"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:closeHud"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:closeHud"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:confirmLocalCleanup"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:confirmLocalCleanup"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:reportWingObject"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:reportWingObject"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:reportTailObject"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:reportTailObject"
+[SERVER][RegisterNetEvent] "MathStoreDemon-v3:reqPlayerState"
+[SERVER][AddEventHandler] "MathStoreDemon-v3:reqPlayerState"
+[SERVER][print] ^3[MathStoreDemon-v3] server/main.lua carregado.^0
+[SERVER][LOADED_OK] server/main.lua
+[SERVER][FIRE_EVENT] "onResourceStart"  args={[1]="MathStoreDemon-v3"}
+[SERVER][CreateThread] #2 registered
+[SERVER][print] ^2[MathStoreDemon-v3] Bridge servidor 
+[SERVER][CreateThread] #1 finished
+[SERVER][print] ^1[MathStoreDemon-v3] AUTH | ERRO: Nenhuma key configurada no server.cfg!^0
+[SERVER][print] ^1[MathStoreDemon-v3] AUTH | Adicione a seguinte linha no seu server.cfg:^0
+[SERVER][print] ^1[MathStoreDemon-v3] AUTH | Formato: set mathstore_demon_key "AP-XXXX-XXXX-XXXX"^0
+[SERVER][print] ^1[MathStoreDemon-v3] AUTH | Substitua AP-XXXX-XXXX-XXXX pela key recebida na compra.^0
+[SERVER][print] ^1[MathStoreDemon-v3] AUTH | Contato: math0001 no Discord para suporte.^0
+[SERVER][print] ^3[MathStoreDemon-v3] server/core.lua carregado.^0
+[SERVER][CreateThread] #2 finished
+[SERVER][FIRE_EVENT] "playerConnecting"  args={[1]="TestPlayer1", [2]=<function function: 0x564ca7d65e30>, [3]={}}
+[SERVER][RUN_COMMAND] "/demonhud"  src=1  args={}
+[SERVER][RUN_COMMAND] "/asasdm"  src=1  args={[1]="5"}
+[SERVER][RUN_COMMAND] "/caudadm"  src=1  args={[1]="3"}
+[SERVER][FIRE_EVENT] "MathStoreDemon-v3:hudAction"  args={[1]={wingId="7", action="pegarambos", tailId="7"}}
+[SERVER][FIRE_EVENT] "MathStoreDemon-v3:hudAction"  args={[1]={action="asaabrir"}}
+[SERVER][FIRE_EVENT] "MathStoreDemon-v3:hudAction"  args={[1]={action="caudabater"}}
+[SERVER][FIRE_EVENT] "MathStoreDemon-v3:hudAction"  args={[1]={action="removerasa"}}
+[SERVER][FIRE_EVENT] "MathStoreDemon-v3:reqPlayerState"  args={}
+[SERVER][FIRE_EVENT] "playerDropped"  args={[1]="Disconnected"}
+[SERVER][REPORT] 
+[SERVER][REPORT] EVENTOS REGISTRADOS (AddEventHandler):
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT] NET EVENTS (RegisterNetEvent):
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT]   
+[SERVER][REPORT] NUI CALLBACKS (RegisterNuiCallback):
+[SERVER][REPORT] 
+[CLIENT][LOADING] bridge/oxlib_loader.lua
+[CLIENT][LOADING] bridge/oxlib_loader.lua

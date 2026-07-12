@@ -1,0 +1,581 @@
+[T][LOADING] config/config.lua
+[T][LOADED_OK] config/config.lua
+[T][NEW_GLOBAL] PlaceObjectOnGroundProperly = <function function: 0x56551509a560>
+[T][NEW_GLOBAL] rawget = <function function: 0x5654f05203d0>
+[T][NEW_GLOBAL] NetworkSetEntityInvisibleToNetwork = <function function: 0x565515099370>
+[T][NEW_GLOBAL] SetPedClothingSpawnModifier = <function function: 0x565515098c80>
+[T][NEW_GLOBAL] _G = {Config={HudCommand="demonhud", Callbacks={HasPermission=<function function: 0x5655150a0700>, CanOpenHUD=<function function: 0x5655150a06d0>, CanEquipWings=<function function: 0x56551509dc30>, OnWingsRemoved=<function function: 0x5655150a06a0>, OnWingsEquipped=<function function: 0x5655150a0630>}, Debug={ShowLocals=true, Filter="", WatchInterval=10000, Enabled=false, ShowNativeHooks=true, ShowThreads=true, ShowHttp=true, WatchNewGlobals=false, ShowNui=true}, TailCommands={enrolar="caudacl", bater="caudabt", remove="removercd", color="caudacordm", reta="caudaop", equip="caudadm"}, Keybinds={toggle="", hud="", fly=false}, Framework="vrp", Cooldowns={}, Locale="pt-BR", Commands={cleanup="asaslimpardm", bater="baterdm", toggle="asasdmtg", equip="asasdm", fechar="fechardm", remove="removerdm", fly="asasvoardm", cleanup2="asaslimpar2dm", abrir="abrirdm", color="asascordm"}, Notifications={duration=5000, type="ox_lib"}, UseOxLib=true}, rawget=<function function: 0x5654f05203d0>, NetworkSetEntityInvisibleToNetwork=<function function: 0x565515099370>, SetPedClothingSpawnModifier=<function function: 0x565515098c80>, _G=<cycle>, NetworkIsSessionStarted=<function function: 0x565515068b90>, __index={Config={HudCommand="demonhud", Callbacks={HasPermission=<function function: 0x5655150a0700>, CanOpenHUD=<function function: 0x5655150a06d0>, CanEquipWings=<function function: 0x56551509dc30>, OnWingsRemoved=<function function: 0x5655150a06a0>, OnWingsEquipped=<function function: 0x5655150a0630>}, Debug={ShowLocals=true, Filter="", WatchInterval=10000, Enabled=false, ShowNativeHooks=true, ShowThreads=true, ShowHttp=true, WatchNewGlobals=false, ShowNui=true}, TailCommands={enrolar="caudacl", bater="caudabt", remove="removercd", color="caudacordm", reta="caudaop", equip="caudadm"}, Keybinds={toggle="", hud="", fly=false}, Framework="vrp", Cooldowns={}, Locale="pt-BR", Commands={cleanup="asaslimpardm", bater="baterdm", toggle="asasdmtg", equip="asasdm", fechar="fechardm", remove="removerdm", fly="asasvoardm", cleanup2="asaslimpar2dm", abrir="abrirdm", color="asascordm"}, Notifications={duration=5000, type="ox_lib"}, UseOxLib=true}, rawget=<function function: 0x5654f05203d0>, NetworkSetEntityInvisibleToNetwork=<function function: 0x565515099370>, SetPedClothingSpawnModifier=<function function: 0x565515098c80>, _G=<cycle>, NetworkIsSessionStarted=<function function: 0x565515068b90>, loadstring=<function function: 0x5654f0520aa0>, IsEntityOnScreen=<function function: 0x565515099640>, IsDisabledControlPressed=<function function: 0x565515098e00>, AddEventHandler=<function function: 0x5655150691b0>, GetPedBoneCoords=<function function: 0x565515064fc0>, rawlen=<function function: 0x5654f0520420>, NetworkGetEntityFromNetworkId=<function function: 0x565515068b20>, IsPlayerAceAllowed=<function function: 0x5655150989c0>, warn=<function function: 0x5654f05204d0>, vector2=<function function: 0x56551509da00>, IsEntityAPed=<function function: 0x565515099bc0>, GetFinalRenderedCamRot=<function function: 0x5655150999d0>, _commands={}, LoadResourceFile=<function function: 0x565515068f90>, Wait=<function function: 0x565515069070>, IsPedSprinting=<function function: 0x565515099da0>, RegisterNetEvent=<function function: 0x5655150691f0>, pcall=<function function: 0x5654f05211c0>, vector3=<function function: 0x56551509d990>, SetGameplayCamRelativePitch=<function function: 0x565515099970>, GetNumPlayerIdentifiers=<function function: 0x565515098ab0>, loadfile=<function function: 0x5654f0520bc0>, SetNotificationMessage=<function function: 0x565515099220>, RegisterKeyMapping=<function function: 0x565515065240>, ...}, IsEntityOnScreen=<function function: 0x565515099640>, IsDisabledControlPressed=<function function: 0x565515098e00>, loadstring=<function function: 0x5654f0520aa0>, GetPedBoneCoords=<function function: 0x565515064fc0>, rawlen=<function function: 0x5654f0520420>, AddEventHandler=<function function: 0x5655150691b0>, IsPlayerAceAllowed=<function function: 0x5655150989c0>, warn=<function function: 0x5654f05204d0>, rawequal=<function function: 0x5654f0520480>, IsEntityAPed=<function function: 0x565515099bc0>, GetFinalRenderedCamRot=<function function: 0x5655150999d0>, _commands={}, LoadResourceFile=<function function: 0x565515068f90>, Wait=<function function: 0x565515069070>, IsPedSprinting=<function function: 0x565515099da0>, RegisterNetEvent=<function function: 0x5655150691f0>, pcall=<function function: 0x5654f05211c0>, vector2=<function function: 0x56551509da00>, vector3=<function function: 0x56551509d990>, GetNumPlayerIdentifiers=<function function: 0x565515098ab0>, SetGravityLevel=<function function: 0x565515099a00>, CreateObjectNoOffset=<function function: 0x565515068880>, RegisterKeyMapping=<function function: 0x565515065240>, ...}
+[T][NEW_GLOBAL] NetworkIsSessionStarted = <function function: 0x565515068b90>
+[T][NEW_GLOBAL] GetEntityType = <function function: 0x565515099600>
+[T][NEW_GLOBAL] IsEntityOnScreen = <function function: 0x565515099640>
+[T][NEW_GLOBAL] IsDisabledControlPressed = <function function: 0x565515098e00>
+[T][NEW_GLOBAL] GetFollowPedCamHeading = <function function: 0x5655150998b0>
+[T][NEW_GLOBAL] GetPedBoneCoords = <function function: 0x565515064fc0>
+[T][NEW_GLOBAL] rawlen = <function function: 0x5654f0520420>
+[T][NEW_GLOBAL] tostring = <function function: 0x5654f05201e0>
+[T][NEW_GLOBAL] IsPlayerAceAllowed = <function function: 0x5655150989c0>
+[T][NEW_GLOBAL] warn = <function function: 0x5654f05204d0>
+[T][NEW_GLOBAL] LocalPlayer = {state={}}
+[T][NEW_GLOBAL] IsEntityAPed = <function function: 0x565515099bc0>
+[T][NEW_GLOBAL] GetFinalRenderedCamRot = <function function: 0x5655150999d0>
+[T][NEW_GLOBAL] _commands = {}
+[T][NEW_GLOBAL] LoadResourceFile = <function function: 0x565515068f90>
+[T][NEW_GLOBAL] Wait = <function function: 0x565515069070>
+[T][NEW_GLOBAL] IsPedSprinting = <function function: 0x565515099da0>
+[T][NEW_GLOBAL] RegisterNetEvent = <function function: 0x5655150691f0>
+[T][NEW_GLOBAL] pcall = <function function: 0x5654f05211c0>
+[T][NEW_GLOBAL] ClearPedTasks = <function function: 0x565515099790>
+[T][NEW_GLOBAL] io = {lines=<function function: 0x5654f0524630>, popen=<function function: 0x5654f0523820>, stdin=<userdata>, tmpfile=<function function: 0x5654f0523580>, stderr=<userdata>, stdout=<userdata>, input=<function function: 0x5654f0523750>, close=<function function: 0x5654f0524490>, write=<function function: 0x5654f05237b0>, type=<function function: 0x5654f0522ee0>, read=<function function: 0x5654f0523f60>, flush=<function function: 0x5654f0523310>, open=<function function: 0x5654f0523910>, output=<function function: 0x5654f0523780>}
+[T][NEW_GLOBAL] GetNumPlayerIdentifiers = <function function: 0x565515098ab0>
+[T][NEW_GLOBAL] SetEntityVelocity = <function function: 0x565515065120>
+[T][NEW_GLOBAL] select = <function function: 0x5654f0520210>
+[T][NEW_GLOBAL] RegisterKeyMapping = <function function: 0x565515065240>
+[T][NEW_GLOBAL] Config = {HudCommand="demonhud", Callbacks={HasPermission=<function function: 0x5655150a0700>, CanOpenHUD=<function function: 0x5655150a06d0>, CanEquipWings=<function function: 0x56551509dc30>, OnWingsRemoved=<function function: 0x5655150a06a0>, OnWingsEquipped=<function function: 0x5655150a0630>}, Debug={ShowLocals=true, Filter="", WatchInterval=10000, Enabled=false, ShowNativeHooks=true, ShowThreads=true, ShowHttp=true, WatchNewGlobals=false, ShowNui=true}, TailCommands={enrolar="caudacl", bater="caudabt", remove="removercd", color="caudacordm", reta="caudaop", equip="caudadm"}, Keybinds={toggle="", hud="", fly=false}, Framework="vrp", Cooldowns={}, Locale="pt-BR", Commands={cleanup="asaslimpardm", bater="baterdm", toggle="asasdmtg", equip="asasdm", fechar="fechardm", remove="removerdm", fly="asasvoardm", cleanup2="asaslimpar2dm", abrir="abrirdm", color="asascordm"}, Notifications={duration=5000, type="ox_lib"}, UseOxLib=true}
+[T][NEW_GLOBAL] SendNuiMessage = <function function: 0x5655150693c0>
+[T][NEW_GLOBAL] GetPedConfigFlag = <function function: 0x5655150652c0>
+[T][NEW_GLOBAL] require = <function function: 0x565515061690>
+[T][NEW_GLOBAL] print = <function function: 0x56551509da60>
+[T][NEW_GLOBAL] GetGameTimer = <function function: 0x565515069040>
+[T][NEW_GLOBAL] IsEntityPlayingAnim = <function function: 0x565515064e90>
+[T][NEW_GLOBAL] GetOffsetFromEntityInWorldCoords = <function function: 0x56551509a5c0>
+[T][NEW_GLOBAL] RequestAnimDict = <function function: 0x565515068d40>
+[T][NEW_GLOBAL] SetPedMotionBlur = <function function: 0x565515099c80>
+[T][NEW_GLOBAL] GetFinalRenderedCamCoord = <function function: 0x5655150999a0>
+[T][NEW_GLOBAL] _VERSION = "Lua 5.4"
+[T][NEW_GLOBAL] RegisterCommand = <function function: 0x5655150694f0>
+[T][NEW_GLOBAL] PlayAnimOnEntity = <function function: 0x565515064e10>
+[T][NEW_GLOBAL] SetEntityNoCollisionEntity = <function function: 0x565515099840>
+[T][NEW_GLOBAL] HasAnimSetLoaded = <function function: 0x565515099400>
+[T][NEW_GLOBAL] CreateObject = <function function: 0x565515068880>
+[T][NEW_GLOBAL] Player = <function function: 0x56551509a490>
+[T][NEW_GLOBAL] DetachEntity = <function function: 0x5655150689e0>
+[T][NEW_GLOBAL] AttachEntityToEntity = <function function: 0x565515068900>
+[T][NEW_GLOBAL] SetModelAsNoLongerNeeded = <function function: 0x565515068cc0>
+[T][NEW_GLOBAL] DrawNotification = <function function: 0x56551509a1f0>
+[T][NEW_GLOBAL] GetEntitySpeed = <function function: 0x5655150650f0>
+[T][NEW_GLOBAL] IsEntityAVehicle = <function function: 0x565515099bf0>
+[T][NEW_GLOBAL] SetTextComponentFormat = <function function: 0x56551509a190>
+[T][NEW_GLOBAL] RequestAnimSet = <function function: 0x5655150993d0>
+[T][NEW_GLOBAL] GetPlayers = <function function: 0x565515098a30>
+[T][NEW_GLOBAL] dofile = <function function: 0x5654f05208d0>
+[T][NEW_GLOBAL] GetEntityForwardVector = <function function: 0x565515099e90>
+[T][NEW_GLOBAL] DisableControlAction = <function function: 0x565515098e60>
+[T][NEW_GLOBAL] NetworkGetEntityFromNetworkId = <function function: 0x565515068b20>
+[T][NEW_GLOBAL] TriggerServerEvent = <function function: 0x5655150692b0>
+[T][NEW_GLOBAL] HasModelLoaded = <function function: 0x565515068c60>
+[T][NEW_GLOBAL] loadfile = <function function: 0x5654f0520bc0>
+[T][NEW_GLOBAL] coroutine = {close=<function function: 0x5654f0521800>, isyieldable=<function function: 0x5654f05215d0>, wrap=<function function: 0x5654f05218e0>, yield=<function function: 0x5654f0521390>, create=<function function: 0x5654f0521580>, running=<function function: 0x5654f0521560>, status=<function function: 0x5654f05216e0>, resume=<function function: 0x5654f0521750>}
+[T][NEW_GLOBAL] AddStateBagChangeHandler = <function function: 0x56551509a350>
+[T][NEW_GLOBAL] SetEntityHeading = <function function: 0x5655150651c0>
+[T][NEW_GLOBAL] EndTextCommandGetWidth = <function function: 0x565515099130>
+[T][NEW_GLOBAL] GetPlayerPed = <function function: 0x565515068800>
+[T][NEW_GLOBAL] DeleteObject = <function function: 0x565515068940>
+[T][NEW_GLOBAL] module = <function function: 0x565515065330>
+[T][NEW_GLOBAL] DeleteEntity = <function function: 0x565515068940>
+[T][NEW_GLOBAL] loadstring = <function function: 0x5654f0520aa0>
+[T][NEW_GLOBAL] debug = {traceback=<function function: 0x5654f0521ff0>, getupvalue=<function function: 0x5654f0521a90>, setcstacklimit=<function function: 0x5654f05219a0>, gethook=<function function: 0x5654f05222a0>, getmetatable=<function function: 0x5654f0521b90>, getregistry=<function function: 0x5654f05219d0>, setlocal=<function function: 0x5654f05220d0>, getuservalue=<function function: 0x5654f0521bd0>, debug=<function function: 0x5654f0521c40>, upvaluejoin=<function function: 0x5654f0521ea0>, getlocal=<function function: 0x5654f0522460>, sethook=<function function: 0x5654f0522620>, getinfo=<function function: 0x5654f0522830>, setupvalue=<function function: 0x5654f0521a70>, upvalueid=<function function: 0x5654f0521e20>, setuservalue=<function function: 0x5654f0521b00>, setmetatable=<function function: 0x5654f0521aa0>}
+[T][NEW_GLOBAL] IsEntityAnObject = <function function: 0x565515099b90>
+[T][NEW_GLOBAL] IsPedFalling = <function function: 0x565515065090>
+[T][NEW_GLOBAL] next = <function function: 0x5654f05206d0>
+[T][NEW_GLOBAL] GetPedBoneIndex = <function function: 0x565515064f80>
+[T][NEW_GLOBAL] TaskPlayAnim = <function function: 0x565515064dd0>
+[T][NEW_GLOBAL] utf8 = {charpattern="[ -�-�][�-�]*", codepoint=<function function: 0x5654f052cc10>, codes=<function function: 0x5654f052c590>, offset=<function function: 0x5654f052c760>, len=<function function: 0x5654f052c9c0>, char=<function function: 0x5654f052cec0>}
+[T][NEW_GLOBAL] collectgarbage = <function function: 0x5654f0520f90>
+[T][NEW_GLOBAL] SetPedResetFlag = <function function: 0x565515098c50>
+[T][NEW_GLOBAL] SetEntityCollision = <function function: 0x565515068a60>
+[T][NEW_GLOBAL] os = {setlocale=<function function: 0x5654f0526c60>, tmpname=<function function: 0x5654f0526f30>, remove=<function function: 0x5654f0526d30>, difftime=<function function: 0x5654f0526eb0>, rename=<function function: 0x5654f0526cd0>, date=<function function: 0x5654f05272c0>, clock=<function function: 0x5654f0526f00>, time=<function function: 0x5654f0527100>, exit=<function function: 0x5654f0526db0>, getenv=<function function: 0x5654f0526d80>, execute=<function function: 0x5654f0526e40>}
+[T][NEW_GLOBAL] TaskPlayAnimAdvanced = <function function: 0x565515099750>
+[T][NEW_GLOBAL] IsPedSwimming = <function function: 0x5655150650c0>
+[T][NEW_GLOBAL] ipairs = <function function: 0x5654f0520680>
+[T][NEW_GLOBAL] StartParticleFxLoopedAtCoord = <function function: 0x565515099f50>
+[T][NEW_GLOBAL] CreateThread = <function function: 0x5655150690b0>
+[T][NEW_GLOBAL] DoesEntityExist = <function function: 0x565515068980>
+[T][NEW_GLOBAL] math = {sqrt=<function function: 0x5654f0524ba0>, floor=<function function: 0x5654f0525600>, ceil=<function function: 0x5654f0525520>, cos=<function function: 0x5654f0524fb0>, tan=<function function: 0x5654f0524b70>, deg=<function function: 0x5654f0524970>, cosh=<function function: 0x5654f0524b40>, frexp=<function function: 0x5654f0524a20>, huge=inf, randomseed=<function function: 0x565515064d90>, min=<function function: 0x5654f0524c10>, asin=<function function: 0x5654f0525040>, maxinteger=9223372036854775807, acos=<function function: 0x5654f0525070>, max=<function function: 0x5654f0524ca0>, abs=<function function: 0x5654f0525360>, random=<function function: 0x565515064d50>, modf=<function function: 0x5654f0525100>, type=<function function: 0x5654f05250a0>, atan2=<function function: 0x5654f0524fe0>, ult=<function function: 0x5654f0524e10>, tointeger=<function function: 0x5654f05252e0>, log10=<function function: 0x5654f05249a0>, atan=<function function: 0x5654f0524fe0>, mininteger=-9223372036854775808, sin=<function function: 0x5654f0524be0>, tanh=<function function: 0x5654f0524ae0>, pow=<function function: 0x5654f0524a90>, ldexp=<function function: 0x5654f05249d0>, sinh=<function function: 0x5654f0524b10>, ...}
+[T][NEW_GLOBAL] SetNetworkIdExistsOnAllMachines = <function function: 0x565515068bf0>
+[T][NEW_GLOBAL] GetWorldPositionOfEntityBone = <function function: 0x5655150996b0>
+[T][NEW_GLOBAL] TaskTurnPedToFaceCoord = <function function: 0x565515099810>
+[T][NEW_GLOBAL] SetEntityCoordsNoOffset = <function function: 0x56551509a590>
+[T][NEW_GLOBAL] load = <function function: 0x5654f0520aa0>
+[T][NEW_GLOBAL] IsPedMale = <function function: 0x565515098d70>
+[T][NEW_GLOBAL] PerformHttpRequest = <function function: 0x565515069470>
+[T][NEW_GLOBAL] UseParticleFxAssetNextCall = <function function: 0x56551509a050>
+[T][NEW_GLOBAL] SetEntityRotation = <function function: 0x565515099710>
+[T][NEW_GLOBAL] SetEntityLodDist = <function function: 0x56551509a530>
+[T][NEW_GLOBAL] EnableControlAction = <function function: 0x565515098e90>
+[T][NEW_GLOBAL] ClearPedTasksImmediately = <function function: 0x5655150997d0>
+[T][NEW_GLOBAL] getmetatable = <function function: 0x5654f0520c40>
+[T][NEW_GLOBAL] SetEntityAsMissionEntity = <function function: 0x565515068aa0>
+[T][NEW_GLOBAL] GetResourceState = <function function: 0x565515068f60>
+[T][NEW_GLOBAL] type = <function function: 0x5654f0520180>
+[T][NEW_GLOBAL] assert = <function function: 0x5654f0520c90>
+[T][NEW_GLOBAL] SetNetworkIdCanMigrate = <function function: 0x565515068bc0>
+[T][NEW_GLOBAL] PlayerId = <function function: 0x565515064f50>
+[T][NEW_GLOBAL] source = 1
+[T][NEW_GLOBAL] msgpack = {pack=<function function: 0x56551509a320>, unpack=<function function: 0x56551509d960>}
+[T][NEW_GLOBAL] GetGameplayCamRelativeHeading = <function function: 0x565515099910>
+[T][NEW_GLOBAL] SetPedEnableWeaponBlocking = <function function: 0x565515098bf0>
+[T][NEW_GLOBAL] __index = {Config={HudCommand="demonhud", Callbacks={HasPermission=<function function: 0x5655150a0700>, CanOpenHUD=<function function: 0x5655150a06d0>, CanEquipWings=<function function: 0x56551509dc30>, OnWingsRemoved=<function function: 0x5655150a06a0>, OnWingsEquipped=<function function: 0x5655150a0630>}, Debug={ShowLocals=true, Filter="", WatchInterval=10000, Enabled=false, ShowNativeHooks=true, ShowThreads=true, ShowHttp=true, WatchNewGlobals=false, ShowNui=true}, TailCommands={enrolar="caudacl", bater="caudabt", remove="removercd", color="caudacordm", reta="caudaop", equip="caudadm"}, Keybinds={toggle="", hud="", fly=false}, Framework="vrp", Cooldowns={}, Locale="pt-BR", Commands={cleanup="asaslimpardm", bater="baterdm", toggle="asasdmtg", equip="asasdm", fechar="fechardm", remove="removerdm", fly="asasvoardm", cleanup2="asaslimpar2dm", abrir="abrirdm", color="asascordm"}, Notifications={duration=5000, type="ox_lib"}, UseOxLib=true}, rawget=<function function: 0x5654f05203d0>, NetworkSetEntityInvisibleToNetwork=<function function: 0x565515099370>, SetPedClothingSpawnModifier=<function function: 0x565515098c80>, _G={Config={HudCommand="demonhud", Callbacks={HasPermission=<function function: 0x5655150a0700>, CanOpenHUD=<function function: 0x5655150a06d0>, CanEquipWings=<function function: 0x56551509dc30>, OnWingsRemoved=<function function: 0x5655150a06a0>, OnWingsEquipped=<function function: 0x5655150a0630>}, Debug={ShowLocals=true, Filter="", WatchInterval=10000, Enabled=false, ShowNativeHooks=true, ShowThreads=true, ShowHttp=true, WatchNewGlobals=false, ShowNui=true}, TailCommands={enrolar="caudacl", bater="caudabt", remove="removercd", color="caudacordm", reta="caudaop", equip="caudadm"}, Keybinds={toggle="", hud="", fly=false}, Framework="vrp", Cooldowns={}, Locale="pt-BR", Commands={cleanup="asaslimpardm", bater="baterdm", toggle="asasdmtg", equip="asasdm", fechar="fechardm", remove="removerdm", fly="asasvoardm", cleanup2="asaslimpar2dm", abrir="abrirdm", color="asascordm"}, Notifications={duration=5000, type="ox_lib"}, UseOxLib=true}, rawget=<function function: 0x5654f05203d0>, NetworkSetEntityInvisibleToNetwork=<function function: 0x565515099370>, SetPedClothingSpawnModifier=<function function: 0x565515098c80>, _G=<cycle>, NetworkIsSessionStarted=<function function: 0x565515068b90>, __index=<cycle>, IsEntityOnScreen=<function function: 0x565515099640>, IsDisabledControlPressed=<function function: 0x565515098e00>, loadstring=<function function: 0x5654f0520aa0>, GetPedBoneCoords=<function function: 0x565515064fc0>, rawlen=<function function: 0x5654f0520420>, AddEventHandler=<function function: 0x5655150691b0>, IsPlayerAceAllowed=<function function: 0x5655150989c0>, warn=<function function: 0x5654f05204d0>, rawequal=<function function: 0x5654f0520480>, IsEntityAPed=<function function: 0x565515099bc0>, GetFinalRenderedCamRot=<function function: 0x5655150999d0>, _commands={}, LoadResourceFile=<function function: 0x565515068f90>, Wait=<function function: 0x565515069070>, IsPedSprinting=<function function: 0x565515099da0>, RegisterNetEvent=<function function: 0x5655150691f0>, pcall=<function function: 0x5654f05211c0>, vector2=<function function: 0x56551509da00>, vector3=<function function: 0x56551509d990>, GetNumPlayerIdentifiers=<function function: 0x565515098ab0>, SetGravityLevel=<function function: 0x565515099a00>, CreateObjectNoOffset=<function function: 0x565515068880>, RegisterKeyMapping=<function function: 0x565515065240>, ...}, NetworkIsSessionStarted=<function function: 0x565515068b90>, loadstring=<function function: 0x5654f0520aa0>, IsEntityOnScreen=<function function: 0x565515099640>, IsDisabledControlPressed=<function function: 0x565515098e00>, AddEventHandler=<function function: 0x5655150691b0>, GetPedBoneCoords=<function function: 0x565515064fc0>, rawlen=<function function: 0x5654f0520420>, NetworkGetEntityFromNetworkId=<function function: 0x565515068b20>, IsPlayerAceAllowed=<function function: 0x5655150989c0>, warn=<function function: 0x5654f05204d0>, vector2=<function function: 0x56551509da00>, IsEntityAPed=<function function: 0x565515099bc0>, GetFinalRenderedCamRot=<function function: 0x5655150999d0>, _commands={}, LoadResourceFile=<function function: 0x565515068f90>, Wait=<function function: 0x565515069070>, IsPedSprinting=<function function: 0x565515099da0>, RegisterNetEvent=<function function: 0x5655150691f0>, pcall=<function function: 0x5654f05211c0>, vector3=<function function: 0x56551509d990>, SetGameplayCamRelativePitch=<function function: 0x565515099970>, GetNumPlayerIdentifiers=<function function: 0x565515098ab0>, loadfile=<function function: 0x5654f0520bc0>, SetNotificationMessage=<function function: 0x565515099220>, RegisterKeyMapping=<function function: 0x565515065240>, ...}
+[T][NEW_GLOBAL] PlayerPedId = <function function: 0x565515064f20>
+[T][NEW_GLOBAL] StopAnimTask = <function function: 0x565515064e50>
+[T][NEW_GLOBAL] package = {searchers={[1]=<function function: 0x565515061930>, [2]=<function function: 0x565515061970>, [3]=<function function: 0x5655150619b0>, [4]=<function function: 0x5655150619f0>}, loadlib=<function function: 0x5654f05261b0>, config="/\n;\n?\n!\n-\n", searchpath=<function function: 0x5654f0525f80>, loaded={coroutine={close=<function function: 0x5654f0521800>, isyieldable=<function function: 0x5654f05215d0>, wrap=<function function: 0x5654f05218e0>, yield=<function function: 0x5654f0521390>, create=<function function: 0x5654f0521580>, running=<function function: 0x5654f0521560>, status=<function function: 0x5654f05216e0>, resume=<function function: 0x5654f0521750>}, _G={Config={HudCommand="demonhud", Callbacks={HasPermission=..., CanOpenHUD=..., CanEquipWings=..., OnWingsRemoved=..., OnWingsEquipped=...}, Debug={ShowLocals=..., Filter=..., WatchInterval=..., Enabled=..., ShowNativeHooks=..., ShowThreads=..., ShowHttp=..., WatchNewGlobals=..., ShowNui=...}, TailCommands={enrolar=..., bater=..., remove=..., color=..., reta=..., equip=...}, Keybinds={toggle=..., hud=..., fly=...}, Framework="vrp", Cooldowns={}, Locale="pt-BR", Commands={cleanup=..., bater=..., toggle=..., equip=..., fechar=..., remove=..., fly=..., cleanup2=..., abrir=..., color=...}, Notifications={duration=..., type=...}, UseOxLib=true}, rawget=<function function: 0x5654f05203d0>, NetworkSetEntityInvisibleToNetwork=<function function: 0x565515099370>, SetPedClothingSpawnModifier=<function function: 0x565515098c80>, _G=<cycle>, NetworkIsSessionStarted=<function function: 0x565515068b90>, __index={Config={HudCommand=..., Callbacks=..., Debug=..., TailCommands=..., Keybinds=..., Framework=..., Cooldowns=..., Locale=..., Commands=..., Notifications=..., UseOxLib=...}, rawget=<function function: 0x5654f05203d0>, NetworkSetEntityInvisibleToNetwork=<function function: 0x565515099370>, SetPedClothingSpawnModifier=<function function: 0x565515098c80>, _G=<cycle>, NetworkIsSessionStarted=<function function: 0x565515068b90>, loadstring=<function function: 0x5654f0520aa0>, IsEntityOnScreen=<function function: 0x565515099640>, IsDisabledControlPressed=<function function: 0x565515098e00>, AddEventHandler=<function function: 0x5655150691b0>, GetPedBoneCoords=<function function: 0x565515064fc0>, rawlen=<function function: 0x5654f0520420>, NetworkGetEntityFromNetworkId=<function function: 0x565515068b20>, IsPlayerAceAllowed=<function function: 0x5655150989c0>, warn=<function function: 0x5654f05204d0>, vector2=<function function: 0x56551509da00>, IsEntityAPed=<function function: 0x565515099bc0>, GetFinalRenderedCamRot=<function function: 0x5655150999d0>, _commands={}, LoadResourceFile=<function function: 0x565515068f90>, Wait=<function function: 0x565515069070>, IsPedSprinting=<function function: 0x565515099da0>, RegisterNetEvent=<function function: 0x5655150691f0>, pcall=<function function: 0x5654f05211c0>, vector3=<function function: 0x56551509d990>, SetGameplayCamRelativePitch=<function function: 0x565515099970>, GetNumPlayerIdentifiers=<function function: 0x565515098ab0>, loadfile=<function function: 0x5654f0520bc0>, SetNotificationMessage=<function function: 0x565515099220>, RegisterKeyMapping=<function function: 0x565515065240>, ...}, IsEntityOnScreen=<function function: 0x565515099640>, IsDisabledControlPressed=<function function: 0x565515098e00>, loadstring=<function function: 0x5654f0520aa0>, GetPedBoneCoords=<function function: 0x565515064fc0>, rawlen=<function function: 0x5654f0520420>, AddEventHandler=<function function: 0x5655150691b0>, IsPlayerAceAllowed=<function function: 0x5655150989c0>, warn=<function function: 0x5654f05204d0>, rawequal=<function function: 0x5654f0520480>, IsEntityAPed=<function function: 0x565515099bc0>, GetFinalRenderedCamRot=<function function: 0x5655150999d0>, _commands={}, LoadResourceFile=<function function: 0x565515068f90>, Wait=<function function: 0x565515069070>, IsPedSprinting=<function function: 0x565515099da0>, RegisterNetEvent=<function function: 0x5655150691f0>, pcall=<function function: 0x5654f05211c0>, vector2=<function function: 0x56551509da00>, vector3=<function function: 0x56551509d990>, GetNumPlayerIdentifiers=<function function: 0x565515098ab0>, SetGravityLevel=<function function: 0x565515099a00>, CreateObjectNoOffset=<function function: 0x565515068880>, RegisterKeyMapping=<function function: 0x565515065240>, ...}, package=<cycle>, table={insert=<function function: 0x5654f052c180>, unpack=<function function: 0x5654f052b670>, sort=<function function: 0x5654f052be70>, pack=<function function: 0x5654f052b780>, move=<function function: 0x5654f052c290>, remove=<function function: 0x5654f052bf30>, concat=<function function: 0x5654f052c040>}, math={sqrt=<function function: 0x5654f0524ba0>, floor=<function function: 0x5654f0525600>, ceil=<function function: 0x5654f0525520>, cos=<function function: 0x5654f0524fb0>, tan=<function function: 0x5654f0524b70>, deg=<function function: 0x5654f0524970>, cosh=<function function: 0x5654f0524b40>, frexp=<function function: 0x5654f0524a20>, huge=inf, randomseed=<function function: 0x565515064d90>, min=<function function: 0x5654f0524c10>, asin=<function function: 0x5654f0525040>, maxinteger=9223372036854775807, acos=<function function: 0x5654f0525070>, max=<function function: 0x5654f0524ca0>, abs=<function function: 0x5654f0525360>, random=<function function: 0x565515064d50>, modf=<function function: 0x5654f0525100>, type=<function function: 0x5654f05250a0>, atan2=<function function: 0x5654f0524fe0>, ult=<function function: 0x5654f0524e10>, tointeger=<function function: 0x5654f05252e0>, log10=<function function: 0x5654f05249a0>, atan=<function function: 0x5654f0524fe0>, mininteger=-9223372036854775808, sin=<function function: 0x5654f0524be0>, tanh=<function function: 0x5654f0524ae0>, pow=<function function: 0x5654f0524a90>, ldexp=<function function: 0x5654f05249d0>, sinh=<function function: 0x5654f0524b10>, ...}, debug={traceback=<function function: 0x5654f0521ff0>, getupvalue=<function function: 0x5654f0521a90>, setcstacklimit=<function function: 0x5654f05219a0>, gethook=<function function: 0x5654f05222a0>, getmetatable=<function function: 0x5654f0521b90>, getregistry=<function function: 0x5654f05219d0>, setlocal=<function function: 0x5654f05220d0>, getuservalue=<function function: 0x5654f0521bd0>, debug=<function function: 0x5654f0521c40>, upvaluejoin=<function function: 0x5654f0521ea0>, getlocal=<function function: 0x5654f0522460>, sethook=<function function: 0x5654f0522620>, getinfo=<function function: 0x5654f0522830>, setupvalue=<function function: 0x5654f0521a70>, upvalueid=<function function: 0x5654f0521e20>, setuservalue=<function function: 0x5654f0521b00>, setmetatable=<function function: 0x5654f0521aa0>}, utf8={charpattern="[ -�-�][�-�]*", codepoint=<function function: 0x5654f052cc10>, codes=<function function: 0x5654f052c590>, offset=<function function: 0x5654f052c760>, len=<function function: 0x5654f052c9c0>, char=<function function: 0x5654f052cec0>}, os={setlocale=<function function: 0x5654f0526c60>, tmpname=<function function: 0x5654f0526f30>, remove=<function function: 0x5654f0526d30>, difftime=<function function: 0x5654f0526eb0>, rename=<function function: 0x5654f0526cd0>, date=<function function: 0x5654f05272c0>, clock=<function function: 0x5654f0526f00>, time=<function function: 0x5654f0527100>, exit=<function function: 0x5654f0526db0>, getenv=<function function: 0x5654f0526d80>, execute=<function function: 0x5654f0526e40>}, io={lines=<function function: 0x5654f0524630>, popen=<function function: 0x5654f0523820>, stdin=<userdata>, tmpfile=<function function: 0x5654f0523580>, stderr=<userdata>, stdout=<userdata>, input=<function function: 0x5654f0523750>, close=<function function: 0x5654f0524490>, write=<function function: 0x5654f05237b0>, type=<function function: 0x5654f0522ee0>, read=<function function: 0x5654f0523f60>, flush=<function function: 0x5654f0523310>, open=<function function: 0x5654f0523910>, output=<function function: 0x5654f0523780>}, string={format=<function function: 0x5654f05283f0>, reverse=<function function: 0x5654f0527b10>, dump=<function function: 0x5654f0528250>, upper=<function function: 0x5654f0527a50>, gmatch=<function function: 0x5654f05296c0>, sub=<function function: 0x5654f05295c0>, unpack=<function function: 0x5654f0529f20>, pack=<function function: 0x5654f052ab50>, find=<function function: 0x5654f052b590>, char=<function function: 0x5654f0528080>, packsize=<function function: 0x5654f05293b0>, lower=<function function: 0x5654f0527d60>, len=<function function: 0x5654f0527640>, gsub=<function function: 0x5654f052a510>, rep=<function function: 0x5654f0527bd0>, byte=<function function: 0x5654f0529800>, match=<function function: 0x5654f052b580>}, fivem_runtime={SIDE="T", load_file=<function function: 0x565515068690>, build_env=<function function: 0x565515090170>, report=<function function: 0x565515072b90>, run_threads=<function function: 0x565515068700>, LOG_SCREEN=false, run_command=<function function: 0x565515068740>, ser=<function function: 0x565515062f00>, fire_event=<function function: 0x565515096fe0>, fire_nui=<function function: 0x565515097bd0>, log=<function function: 0x565515062030>, LOG_FILE="/tmp/t.log", RESOURCE="MathStoreDemon-v3"}}, path="/usr/local/share/lua/5.4/?.lua;/usr/local/share/lua/5.4/?/init.lua;/usr/local/lib/lua/5.4/?.lua;/usr/local/lib/lua/5.4/?/init.lua;/usr/share/lua/5.4/?.lua;/usr/share/lua/5.4/?/init.lua;./?.lua;./?/init.lua;./debug_sim/?.lua", cpath="/usr/local/lib/lua/5.4/?.so;/usr/lib/x86_64-linux-gnu/lua/5.4/?.so;/usr/lib/lua/5.4/?.so;/usr/local/lib/lua/5.4/loadall.so;./?.so", preload={}}
+[T][NEW_GLOBAL] ApplyForceToEntity = <function function: 0x565515098b30>
+[T][NEW_GLOBAL] GetEntityRotation = <function function: 0x5655150996e0>
+[T][NEW_GLOBAL] SetPedCanPlayGestureAnims = <function function: 0x565515098bc0>
+[T][NEW_GLOBAL] SetNuiFocusKeepInput = <function function: 0x5655150994d0>
+[T][NEW_GLOBAL] IsControlJustPressed = <function function: 0x565515098dd0>
+[T][NEW_GLOBAL] GetNetworkTime = <function function: 0x565515099e60>
+[T][NEW_GLOBAL] RegisterNuiCallback = <function function: 0x5655150693f0>
+[T][NEW_GLOBAL] arg = {[1]="-e", [2]="\npackage.path = package.path .. ';./debug_sim/?.lua'\npackage.loaded['fivem_runtime'] = nil\nlocal SIM = require('fivem_runtime')\nSIM.SIDE='T'; SIM.LOG_FILE='/tmp/t.log'; SIM.LOG_SCREEN=false\nlocal env = SIM.build_env('CLIENT', 1)\nfor _, s in ipairs({'config/config.lua','config/config_internal.l…", [0]="lua5.4"}
+[T][NEW_GLOBAL] SetEntityVisible = <function function: 0x565515068a20>
+[T][NEW_GLOBAL] error = <function function: 0x5654f0520850>
+[T][NEW_GLOBAL] CreateObjectNoOffset = <function function: 0x565515068880>
+[T][NEW_GLOBAL] SetGravityLevel = <function function: 0x565515099a00>
+[T][NEW_GLOBAL] GetPlayerName = <function function: 0x565515098a70>
+[T][NEW_GLOBAL] Vdist = <function function: 0x565515099a70>
+[T][NEW_GLOBAL] StopParticleFxLooped = <function function: 0x565515099f80>
+[T][NEW_GLOBAL] GetEntityAnimCurrentTime = <function function: 0x565515099430>
+[T][NEW_GLOBAL] SetGameplayCamRelativeHeading = <function function: 0x565515099940>
+[T][NEW_GLOBAL] Vdist2 = <function function: 0x565515099aa0>
+[T][NEW_GLOBAL] SetPedFleeAttributes = <function function: 0x565515098cb0>
+[T][NEW_GLOBAL] IsEntityVisible = <function function: 0x56551509a620>
+[T][NEW_GLOBAL] SetPedComponentVariation = <function function: 0x565515098b90>
+[T][NEW_GLOBAL] IsScreenFadingIn = <function function: 0x5655150992e0>
+[T][NEW_GLOBAL] IsModelValid = <function function: 0x565515068c90>
+[T][NEW_GLOBAL] GetGravityLevel = <function function: 0x565515099a40>
+[T][NEW_GLOBAL] DrawText3D = <function function: 0x565515099160>
+[T][NEW_GLOBAL] GetPedTextureVariation = <function function: 0x565515098d40>
+[T][NEW_GLOBAL] GetPlayerFromServerId = <function function: 0x5655150995d0>
+[T][NEW_GLOBAL] exports = {}
+[T][NEW_GLOBAL] RequestNamedPtfxAsset = <function function: 0x565515099fe0>
+[T][NEW_GLOBAL] NetworkGetNetworkIdFromEntity = <function function: 0x565515068ae0>
+[T][NEW_GLOBAL] vector3 = <function function: 0x56551509d990>
+[T][NEW_GLOBAL] GetTimeDifference = <function function: 0x565515099540>
+[T][NEW_GLOBAL] IsControlPressed = <function function: 0x565515098da0>
+[T][NEW_GLOBAL] NetworkSetNetworkIdCanMigrate = <function function: 0x565515099340>
+[T][NEW_GLOBAL] setmetatable = <function function: 0x5654f05202c0>
+[T][NEW_GLOBAL] EndTextCommandThefeedPostTicker = <function function: 0x5655150991c0>
+[T][NEW_GLOBAL] GetFrameTime = <function function: 0x565515099570>
+[T][NEW_GLOBAL] SetTextDropshadow = <function function: 0x565515099040>
+[T][NEW_GLOBAL] SetAnimCurrentTime = <function function: 0x565515099c50>
+[T][NEW_GLOBAL] SetNuiFocus = <function function: 0x565515069430>
+[T][NEW_GLOBAL] GetVehiclePedIsIn = <function function: 0x565515099b00>
+[T][NEW_GLOBAL] string = {format=<function function: 0x5654f05283f0>, reverse=<function function: 0x5654f0527b10>, dump=<function function: 0x5654f0528250>, upper=<function function: 0x5654f0527a50>, gmatch=<function function: 0x5654f05296c0>, sub=<function function: 0x5654f05295c0>, unpack=<function function: 0x5654f0529f20>, pack=<function function: 0x5654f052ab50>, find=<function function: 0x5654f052b590>, char=<function function: 0x5654f0528080>, packsize=<function function: 0x5654f05293b0>, lower=<function function: 0x5654f0527d60>, len=<function function: 0x5654f0527640>, gsub=<function function: 0x5654f052a510>, rep=<function function: 0x5654f0527bd0>, byte=<function function: 0x5654f0529800>, match=<function function: 0x5654f052b580>}
+[T][NEW_GLOBAL] TriggerClientEvent = <function function: 0x565515069330>
+[T][NEW_GLOBAL] IsPedInAnyVehicle = <function function: 0x565515065000>
+[T][NEW_GLOBAL] json = {decode=<function function: 0x56551509a2f0>, encode=<function function: 0x56551509a280>}
+[T][NEW_GLOBAL] Citizen = {InvokeNative=<function function: 0x565515069170>, Wait=<function function: 0x565515069070>, CreateThread=<function function: 0x5655150690b0>, Trace=<function function: 0x565515069140>}
+[T][NEW_GLOBAL] IsEntityAttached = <function function: 0x5655150689b0>
+[T][NEW_GLOBAL] SetPedToRagdoll = <function function: 0x565515098b60>
+[T][NEW_GLOBAL] SetTextScale = <function function: 0x565515098ef0>
+[T][NEW_GLOBAL] IsEntityDead = <function function: 0x565515065060>
+[T][NEW_GLOBAL] GetAnimCurrentTime = <function function: 0x565515099c20>
+[T][NEW_GLOBAL] SetEntityAlpha = <function function: 0x56551509a4f0>
+[T][NEW_GLOBAL] vRP = {hasPermission=<function function: 0x56551509d7a0>, getUserId=<function function: 0x56551509d760>, hasGroup=<function function: 0x56551509d7e0>}
+[T][NEW_GLOBAL] GetEntityCoords = <function function: 0x56551509a0c0>
+[T][NEW_GLOBAL] BeginTextCommandGetWidth = <function function: 0x565515099100>
+[T][NEW_GLOBAL] GetConvarInt = <function function: 0x565515069000>
+[T][NEW_GLOBAL] GetSelectedPedWeapon = <function function: 0x5655150995a0>
+[T][NEW_GLOBAL] SetEntityCoords = <function function: 0x56551509a080>
+[T][NEW_GLOBAL] AddTextComponentSubstringKeyboardDisplay = <function function: 0x565515099250>
+[T][NEW_GLOBAL] SetEntityAnimCurrentTime = <function function: 0x565515099460>
+[T][NEW_GLOBAL] SetPedMovementClipset = <function function: 0x565515099d30>
+[T][NEW_GLOBAL] removeMyWings = <function function: 0x56551509a0f0>
+[T][NEW_GLOBAL] IsControlJustReleased = <function function: 0x565515098e30>
+[T][NEW_GLOBAL] rawset = <function function: 0x5654f0520370>
+[T][NEW_GLOBAL] SetTextCentre = <function function: 0x565515098fe0>
+[T][NEW_GLOBAL] GetGroundZFor_3dCoord = <function function: 0x565515099f20>
+[T][NEW_GLOBAL] RegisterNUICallback = <function function: 0x5655150652f0>
+[T][NEW_GLOBAL] TriggerEvent = <function function: 0x565515069260>
+[T][NEW_GLOBAL] vector2 = <function function: 0x56551509da00>
+[T][NEW_GLOBAL] GetPedDrawableVariation = <function function: 0x565515098d10>
+[T][NEW_GLOBAL] BeginTextCommandDisplayText = <function function: 0x5655150990a0>
+[T][NEW_GLOBAL] GetPlayerIdentifier = <function function: 0x565515098af0>
+[T][NEW_GLOBAL] GetEntityHeading = <function function: 0x565515065190>
+[T][NEW_GLOBAL] SetTextFont = <function function: 0x565515098f20>
+[T][NEW_GLOBAL] HasAnimDictLoaded = <function function: 0x565515068d80>
+[T][NEW_GLOBAL] NetworkDoesEntityExistWithNetworkId = <function function: 0x565515068b60>
+[T][NEW_GLOBAL] BeginTextCommandThefeedPost = <function function: 0x565515099190>
+[T][NEW_GLOBAL] IsPedStill = <function function: 0x565515099dd0>
+[T][NEW_GLOBAL] ThefeedSetNextPostBackgroundColor = <function function: 0x5655150991f0>
+[T][NEW_GLOBAL] ResetPedMovementClipset = <function function: 0x565515099cf0>
+[T][NEW_GLOBAL] SetTextProportional = <function function: 0x565515098f50>
+[T][NEW_GLOBAL] IsScreenFadedOut = <function function: 0x565515099280>
+[T][NEW_GLOBAL] GetPedMaxMoveBlendRatio = <function function: 0x565515099e30>
+[T][NEW_GLOBAL] IsPrincipalAceAllowed = <function function: 0x565515098a00>
+[T][NEW_GLOBAL] cache = {ped=1001, resource="MathStoreDemon-v3", serverId=1}
+[T][NEW_GLOBAL] IsScreenFadingOut = <function function: 0x5655150992b0>
+[T][NEW_GLOBAL] EndTextCommandDisplayText = <function function: 0x5655150990d0>
+[T][NEW_GLOBAL] rawequal = <function function: 0x5654f0520480>
+[T][NEW_GLOBAL] SetTextOutline = <function function: 0x565515099010>
+[T][NEW_GLOBAL] GetEntityModel = <function function: 0x565515099b60>
+[T][NEW_GLOBAL] NetworkIsEntityNetworked = <function function: 0x5655150993a0>
+[T][NEW_GLOBAL] unpack = <function function: 0x5654f052b670>
+[T][NEW_GLOBAL] GetEntityVelocity = <function function: 0x565515065160>
+[T][NEW_GLOBAL] SetTextColour = <function function: 0x565515098f80>
+[T][NEW_GLOBAL] TriggerLatentClientEvent = <function function: 0x565515069380>
+[T][NEW_GLOBAL] SetPedGravity = <function function: 0x565515099cb0>
+[T][NEW_GLOBAL] table = {insert=<function function: 0x5654f052c180>, unpack=<function function: 0x5654f052b670>, sort=<function function: 0x5654f052be70>, pack=<function function: 0x5654f052b780>, move=<function function: 0x5654f052c290>, remove=<function function: 0x5654f052bf30>, concat=<function function: 0x5654f052c040>}
+[T][NEW_GLOBAL] EndTextCommandDisplayHelp = <function function: 0x56551509a250>
+[T][NEW_GLOBAL] GetEntityRightVector = <function function: 0x565515099ef0>
+[T][NEW_GLOBAL] AddEventHandler = <function function: 0x5655150691b0>
+[T][NEW_GLOBAL] AddTextComponentSubstringPlayerName = <function function: 0x56551509a1c0>
+[T][NEW_GLOBAL] StopResource = <function function: 0x56551509a120>
+[T][NEW_GLOBAL] GetEntityUpVector = <function function: 0x565515099ec0>
+[T][NEW_GLOBAL] GetHashKey = <function function: 0x565515068d00>
+[T][NEW_GLOBAL] SetPedCombatAttributes = <function function: 0x565515098ce0>
+[T][NEW_GLOBAL] SetGameplayCamRelativePitch = <function function: 0x565515099970>
+[T][NEW_GLOBAL] GetPlayerServerId = <function function: 0x565515099510>
+[T][NEW_GLOBAL] RemoveParticleFx = <function function: 0x565515099fb0>
+[T][NEW_GLOBAL] IsEntityInAir = <function function: 0x56551509a5f0>
+[T][NEW_GLOBAL] HasNamedPtfxAssetLoaded = <function function: 0x56551509a020>
+[T][NEW_GLOBAL] DisableAllControlActions = <function function: 0x565515098ec0>
+[T][NEW_GLOBAL] DrawText = <function function: 0x565515099070>
+[T][NEW_GLOBAL] IsPedOnFoot = <function function: 0x565515065030>
+[T][NEW_GLOBAL] tonumber = <function function: 0x5654f0520d10>
+[T][NEW_GLOBAL] RequestModel = <function function: 0x565515068c20>
+[T][NEW_GLOBAL] SetPedHelmet = <function function: 0x565515098c20>
+[T][NEW_GLOBAL] IsPedRunning = <function function: 0x565515099d70>
+[T][NEW_GLOBAL] GetGameplayCamRelativePitch = <function function: 0x5655150998e0>
+[T][NEW_GLOBAL] GetConvar = <function function: 0x565515068fc0>
+[T][NEW_GLOBAL] GetVehicleModel = <function function: 0x565515099b30>
+[T][NEW_GLOBAL] SetTextEntry = <function function: 0x565515098fb0>
+[T][NEW_GLOBAL] vector4 = <function function: 0x56551509da30>
+[T][NEW_GLOBAL] BeginTextCommandDisplayHelp = <function function: 0x56551509a220>
+[T][NEW_GLOBAL] GetResourceMetadata = <function function: 0x56551509a160>
+[T][NEW_GLOBAL] SetNotificationMessage = <function function: 0x565515099220>
+[T][NEW_GLOBAL] GetEntityBoneIndexByName = <function function: 0x565515099670>
+[T][NEW_GLOBAL] SetPedConfigFlag = <function function: 0x565515065280>
+[T][NEW_GLOBAL] GetCurrentResourceName = <function function: 0x565515068f30>
+[T][NEW_GLOBAL] GetAnimDuration = <function function: 0x565515099ad0>
+[T][NEW_GLOBAL] pairs = <function function: 0x5654f05209a0>
+[T][NEW_GLOBAL] NetworkRequestControlOfNetworkId = <function function: 0x565515099310>
+[T][NEW_GLOBAL] IsPedJumping = <function function: 0x565515099e00>
+[T][NEW_GLOBAL] RemoveAnimDict = <function function: 0x565515068db0>
+[T][NEW_GLOBAL] xpcall = <function function: 0x5654f0521250>
+[T][NEW_GLOBAL] IsPedClimbing = <function function: 0x56551509a650>
+[T][NEW_GLOBAL] IsEntityAMissionEntity = <function function: 0x565515099880>
+[T][NEW_GLOBAL] FreezeEntityPosition = <function function: 0x565515065200>
+[T][LOADING] config/config_internal.lua
+[T][LOADED_OK] config/config_internal.lua
+[T][LOADING] config/locales.lua
+[T][LOADED_OK] config/locales.lua
+[T][NEW_GLOBAL] Locales = {en-US={cooldown_wait="Wait %s seconds before using again", massive_cleanup="Removed %s wings", auth_check_cfg="Check that you typed it correctly in server.cfg.", auth_contact="Contact: math0001 on Discord for support.", keybind_toggle="Open/Close Wings", invalid_color="Invalid color (1-%s)", wings_locked="You cannot equip wings right now", auth_disabled_reason="This may have occurred due to terms violation or refund request.", wings_removed="Wings removed", tail_invalid_color="Invalid tail color (1-%s)", auth_add_line="Add the following line to your server.cfg:", auth_disabled_contact="Contact math0001 on Discord for more information.", auth_disabled="YOUR KEY HAS BEEN BLOCKED and you lost access to the product.", auth_wrong_product="This KEY belongs to ANOTHER PRODUCT, not Demon V3.", auth_connection2="Check your internet and try again.", auth_connection3="If the problem persists, contact math0001 on Discord.", auth_wrong_product2="Each product has its own key. Check your panel.", keybind_fly="Toggle Wing Flight", no_permission="No permission", flight_equip_first="Equip wings first! (/%s)", auth_shutdown="Resource disabled due to authentication failure.", loading="Loading...", auth_connection="CONNECTION ERROR with the panel: HTTP %s", auth_not_found="The KEY entered DOES NOT EXIST in the system.", auth_no_key="ERROR: No key configured in server.cfg!", wings_failed="Failed to create wings", auth_replace="Replace AP-XXXX-XXXX-XXXX with the key received on purchase.", auth_format="Format: set %s "AP-XXXX-XXXX-XXXX"", color_changed="Wing color changed to %s", tail_color_changed="Tail color changed to %s", ...}, th={cooldown_wait="รอ %s วินาทีก่อนใช้อีกครั้ง", massive_cleanup="ลบปีกแล้ว %s ชิ้น", auth_check_cfg="ตรวจสอบว่าพิมพ์ถูกต้องใน server.cfg", auth_contact="ติดต่อ: math0001 บน Discord เพื่อขอความช่วยเหลือ", keybind_toggle="เปิด/ปิด ปีก", invalid_color="สีไม่ถูกต้อง (1-%s)", wings_locked="คุณไม่สามารถสวมปีกได้ในตอนนี้", auth_disabled_reason="อาจเกิดจากการละเมิดข้อกำหนดหรือการขอคืนเงิน", wings_removed="ถอดปีกแล้ว", tail_invalid_color="สีหางไม่ถูกต้อง (1-%s)", auth_add_line="เพิ่มบรรทัดต่อไปนี้ใน server.cfg ของคุณ:", auth_disabled_contact="ติดต่อ math0001 บน Discord เพื่อขอข้อมูลเพิ่มเติม", auth_disabled="KEY ของคุณถูกบล็อกและคุณสูญเสียการเข้าถึงผลิตภัณฑ์", auth_wrong_product="KEY นี้เป็นของผลิตภัณฑ์อื่น ไม่ใช่ Demon V3", auth_connection2="ตรวจสอบอินเทอร์เน็ตแล้วลองอีกครั้ง", auth_connection3="หากปัญหายังคงอยู่ ติดต่อ math0001 บน Discord", auth_wrong_product2="แต่ละผลิตภัณฑ์มี key เฉพาะ ตรวจสอบในแผงควบคุม", keybind_fly="เปิด/ปิด การบิน", no_permission="ไม่มีสิทธิ์", flight_equip_first="สวมปีกก่อน! (/%s)", auth_shutdown="Resource ถูกปิดใช้งานเนื่องจากการยืนยันตัวตนล้มเหลว", loading="กำลังโหลด...", auth_connection="ข้อผิดพลาดการเชื่อมต่อกับแผงควบคุม: HTTP %s", auth_not_found="KEY ที่ป้อนไม่มีอยู่ในระบบ", auth_no_key="ข้อผิดพลาด: ไม่มี key ใน server.cfg!", wings_failed="สร้างปีกล้มเหลว", auth_replace="แทนที่ AP-XXXX-XXXX-XXXX ด้วย key ที่ได้รับจากการซื้อ", auth_format="รูปแบบ: set %s "AP-XXXX-XXXX-XXXX"", color_changed="เปลี่ยนสีปีกเป็น %s", tail_color_changed="เปลี่ยนสีหางเป็น %s", ...}, pt-PT={cooldown_wait="Aguarde %s segundos para usar novamente", massive_cleanup="Removidas %s asas", auth_check_cfg="Verifique se escreveu corretamente no server.cfg.", auth_contact="Contacto: math0001 no Discord para suporte.", keybind_toggle="Abrir/Fechar Asas", invalid_color="Cor invalida (1-%s)", wings_locked="Nao pode equipar asas neste momento", auth_disabled_reason="Isto pode ter ocorrido por violacao de termos ou pedido de reembolso.", wings_removed="Asas removidas", tail_invalid_color="Cor de cauda invalida (1-%s)", auth_add_line="Adicione a seguinte linha no seu server.cfg:", auth_disabled_contact="Entre em contacto com math0001 no Discord para mais informacoes.", auth_disabled="A SUA KEY FOI BLOQUEADA e perdeu o acesso ao produto.", auth_wrong_product="Esta KEY pertence a OUTRO PRODUTO, nao ao Demon V3.", auth_connection2="Verifique a sua internet e tente novamente.", auth_connection3="Se o problema persistir, contacte math0001 no Discord.", auth_wrong_product2="Cada produto tem a sua propria key. Verifique no painel.", keybind_fly="Ativar/Desativar Voo", no_permission="Sem permissao", flight_equip_first="Equipe as asas primeiro! (/%s)", auth_shutdown="Resource desativado por falha de autenticacao.", loading="A carregar...", auth_connection="ERRO DE LIGACAO com o painel: HTTP %s", auth_not_found="A KEY inserida NAO EXISTE no sistema.", auth_no_key="ERRO: Nenhuma key configurada no server.cfg!", wings_failed="Falha ao criar asas", auth_replace="Substitua AP-XXXX-XXXX-XXXX pela key recebida na compra.", auth_format="Formato: set %s "AP-XXXX-XXXX-XXXX"", color_changed="Cor das asas alterada para %s", tail_color_changed="Cor da cauda alterada para %s", ...}, pt-BR={cooldown_wait="Aguarde %s segundos para usar novamente", massive_cleanup="Removidas %s asas", auth_check_cfg="Verifique se digitou corretamente no server.cfg.", auth_contact="Contato: math0001 no Discord para suporte.", keybind_toggle="Abrir/Fechar Asas", invalid_color="Cor invalida (1-%s)", wings_locked="Voce nao pode equipar asas no momento", auth_disabled_reason="Isso pode ter ocorrido por violacao de termos ou pedido de reembolso.", wings_removed="Asas removidas", tail_invalid_color="Cor de cauda invalida (1-%s)", auth_add_line="Adicione a seguinte linha no seu server.cfg:", auth_disabled_contact="Entre em contato com math0001 no Discord para mais informacoes.", auth_disabled="A SUA KEY FOI BLOQUEADA e voce perdeu o acesso ao produto.", auth_wrong_product="Essa KEY pertence a OUTRO PRODUTO, nao ao Demon V3.", auth_connection2="Verifique sua internet e tente novamente.", auth_connection3="Se o problema persistir, contate math0001 no Discord.", auth_wrong_product2="Cada produto tem sua propria key. Verifique no painel.", keybind_fly="Ativar/Desativar Voo", no_permission="Sem permissao", flight_equip_first="Equipe as asas primeiro! (/%s)", auth_shutdown="Resource desativado por falha de autenticacao.", loading="Carregando...", auth_connection="ERRO DE CONEXAO com o painel: HTTP %s", auth_not_found="A KEY informada NAO EXISTE no sistema.", auth_no_key="ERRO: Nenhuma key configurada no server.cfg!", wings_failed="Falha ao criar asas", auth_replace="Substitua AP-XXXX-XXXX-XXXX pela key recebida na compra.", auth_format="Formato: set %s "AP-XXXX-XXXX-XXXX"", color_changed="Cor das asas alterada para %s", tail_color_changed="Cor da cauda alterada para %s", ...}, es={cooldown_wait="Espera %s segundos para usar de nuevo", massive_cleanup="Removidas %s alas", auth_check_cfg="Verifica que la escribiste correctamente en server.cfg.", auth_contact="Contacto: math0001 en Discord para soporte.", keybind_toggle="Abrir/Cerrar Alas", invalid_color="Color invalido (1-%s)", wings_locked="No puedes equipar alas en este momento", auth_disabled_reason="Esto pudo haber ocurrido por violacion de terminos o solicitud de reembolso.", wings_removed="Alas removidas", tail_invalid_color="Color de cola invalido (1-%s)", auth_add_line="Agrega la siguiente linea en tu server.cfg:", auth_disabled_contact="Contacta a math0001 en Discord para mas informacion.", auth_disabled="TU KEY FUE BLOQUEADA y perdiste el acceso al producto.", auth_wrong_product="Esta KEY pertenece a OTRO PRODUCTO, no a Demon V3.", auth_connection2="Verifica tu internet e intenta de nuevo.", auth_connection3="Si el problema persiste, contacta a math0001 en Discord.", auth_wrong_product2="Cada producto tiene su propia key. Verifica en el panel.", keybind_fly="Activar/Desactivar Vuelo", no_permission="Sin permiso", flight_equip_first="Equipa las alas primero! (/%s)", auth_shutdown="Resource desactivado por falla de autenticacion.", loading="Cargando...", auth_connection="ERROR DE CONEXION con el panel: HTTP %s", auth_not_found="La KEY ingresada NO EXISTE en el sistema.", auth_no_key="ERROR: Ninguna key configurada en server.cfg!", wings_failed="Error al crear alas", auth_replace="Reemplaza AP-XXXX-XXXX-XXXX por la key recibida en la compra.", auth_format="Formato: set %s "AP-XXXX-XXXX-XXXX"", color_changed="Color de alas cambiado a %s", tail_color_changed="Color de la cola cambiado a %s", ...}, fr={cooldown_wait="Attendez %s secondes avant de reutiliser", massive_cleanup="%s ailes supprimees", auth_check_cfg="Verifiez que vous l'avez correctement saisie dans server.cfg.", auth_contact="Contact : math0001 sur Discord pour le support.", keybind_toggle="Ouvrir/Fermer Ailes", invalid_color="Couleur invalide (1-%s)", wings_locked="Vous ne pouvez pas equiper d'ailes pour le moment", auth_disabled_reason="Cela peut etre du a une violation des conditions ou une demande de remboursement.", wings_removed="Ailes retirees", tail_invalid_color="Couleur de queue invalide (1-%s)", auth_add_line="Ajoutez la ligne suivante dans votre server.cfg :", auth_disabled_contact="Contactez math0001 sur Discord pour plus d'informations.", auth_disabled="VOTRE KEY A ETE BLOQUEE et vous avez perdu l'acces au produit.", auth_wrong_product="Cette KEY appartient a un AUTRE PRODUIT, pas a Demon V3.", auth_connection2="Verifiez votre internet et reessayez.", auth_connection3="Si le probleme persiste, contactez math0001 sur Discord.", auth_wrong_product2="Chaque produit a sa propre key. Verifiez dans le panneau.", keybind_fly="Activer/Desactiver Vol", no_permission="Pas de permission", flight_equip_first="Equipez les ailes d'abord ! (/%s)", auth_shutdown="Resource desactive suite a un echec d'authentification.", loading="Chargement...", auth_connection="ERREUR DE CONNEXION avec le panneau : HTTP %s", auth_not_found="La KEY saisie N'EXISTE PAS dans le systeme.", auth_no_key="ERREUR : Aucune key configuree dans server.cfg !", wings_failed="Echec de la creation des ailes", auth_replace="Remplacez AP-XXXX-XXXX-XXXX par la key recue a l'achat.", auth_format="Format : set %s "AP-XXXX-XXXX-XXXX"", color_changed="Couleur des ailes changee en %s", tail_color_changed="Couleur de la queue changee en %s", ...}}
+[T][NEW_GLOBAL] L = <function function: 0x565515066550>
+[T][LOADING] config/permissions.lua
+[T][LOADED_OK] config/permissions.lua
+[T][NEW_GLOBAL] Permissions = {VRP={admin_cleanup={[1]="Admin"}, use={[1]="demonios3.permissao", [2]="Admin"}}, Groups={admin={[1]="group.admin", [2]="group.god", [3]="group.superadmin", [4]="Admin"}, vip={[1]="group.vip", [2]="group.diamond"}, moderator={[1]="group.mod", [2]="group.moderator", [3]="group.helper"}}, Features={admin_cleanup={citizenids={}, vrpPermissions={[1]="Admin"}, sets={[1]="admin"}, enabled=true, groups={[1]="admin"}, jobs={}}, use={citizenids={}, vrpPermissions={}, sets={[1]="ceo", [2]="admin", [3]="ninfas"}, enabled=true, groups={[1]="admin"}, jobs={}}}, Ace={admin_cleanup="mathstore_demon.admin", use="mathstore_demon.use"}}
+[T][LOADING] bridge/shared.lua
+[T][LOADED_OK] bridge/shared.lua
+[T][NEW_GLOBAL] WING_STATE_KEY = "activeWingResource"
+[T][NEW_GLOBAL] RES_NAME = "MathStoreDemon-v3"
+[T][NEW_GLOBAL] Bridge = {DetectFramework=<function function: 0x565515149da0>, HasOxLib=<function function: 0x565515262010>, Framework="vrp", Debug=<function function: 0x565515136ad0>, Log=<function function: 0x565515236100>}
+[T][NEW_GLOBAL] E = {tailSyncBulk="MathStoreDemon-v3:tail:sync:bulk", changeColor="MathStoreDemon-v3:changeColor", tailBater="MathStoreDemon-v3:tail:bater", syncRequestBulk="MathStoreDemon-v3:sync:requestBulk", syncRemoved="MathStoreDemon-v3:sync:removed", tailRemove="MathStoreDemon-v3:tail:remove", syncAnimChanged="MathStoreDemon-v3:sync:animChanged", deleteMassive="MathStoreDemon-v3:deleteMassive", bater="MathStoreDemon-v3:bater", syncSpawn="MathStoreDemon-v3:sync:spawn", tailSpawn="MathStoreDemon-v3:tail:spawn", syncAnim="MathStoreDemon-v3:sync:anim", demonHud="MathStoreDemon-v3:hud", tailReta="MathStoreDemon-v3:tail:reta", tailSyncRequestBulk="MathStoreDemon-v3:tail:sync:requestBulk", tailChangeColor="MathStoreDemon-v3:tail:changeColor", tailEnrolar="MathStoreDemon-v3:tail:enrolar", tailSyncSpawn="MathStoreDemon-v3:tail:sync:spawn", tailSyncRemoved="MathStoreDemon-v3:tail:sync:removed", spawn="MathStoreDemon-v3:spawn", tailSyncRemove="MathStoreDemon-v3:tail:sync:remove", syncRemove="MathStoreDemon-v3:sync:remove", tailSyncSpawned="MathStoreDemon-v3:tail:sync:spawned", bridgeNotify="MathStoreDemon-v3:bridge:notify", deleteNearby="MathStoreDemon-v3:deleteNearby", remove="MathStoreDemon-v3:remove", abrir="MathStoreDemon-v3:abrir", toggle="MathStoreDemon-v3:toggle", fly="MathStoreDemon-v3:fly", syncSpawned="MathStoreDemon-v3:sync:spawned", ...}
+[T][LOADING] bridge/client.lua
+[T][CreateThread] #1 registered
+[T][RegisterNetEvent] "MathStoreDemon-v3:bridge:notify"
+[T][AddEventHandler] "MathStoreDemon-v3:bridge:notify"
+[T][LOADED_OK] bridge/client.lua
+[T][THREAD_PUMP] running 1 threads, max_ticks=2
+[T][module] "vrp" (Lua5.1 compat, ignored)
+[T][CreateThread] #1 ERROR: Luraph Script:47: bridge/client.lua:2: attempt to index a nil value (field '?')
+[T][THREAD_PUMP] done, 0 threads still alive (stopped early)
+[T][print] ok
+[T][LOADING] client/main.lua
+[T][RegisterNetEvent] "MathStoreDemon-v3:authStatus"
+[T][AddEventHandler] "MathStoreDemon-v3:authStatus"
+[T][CreateThread] #2 registered
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:sync:spawn"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:sync:spawn"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:sync:anim"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:sync:anim"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:sync:remove"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:sync:remove"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:sync:bulk"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:sync:bulk"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:spawn"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:spawn"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:remove"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:remove"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:changeColor"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:changeColor"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:bater"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:bater"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:enrolar"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:enrolar"
+[T][RegisterNetEvent] "MathStoreDemon-v3:tail:reta"
+[T][AddEventHandler] "MathStoreDemon-v3:tail:reta"
+[T][AddEventHandler] "flight:start"
+[T][AddEventHandler] "flight:end"
+[T][AddEventHandler] "flight:animationChange"
+[T][AddEventHandler] "wing:rasanteActive"
+[T][AddEventHandler] "wing:subidaActive"
+[T][RegisterNetEvent] "MathStoreDemon-v3:sync:spawn"
+[T][AddEventHandler] "MathStoreDemon-v3:sync:spawn"
+[T][RegisterNetEvent] "MathStoreDemon-v3:sync:anim"
+[T][AddEventHandler] "MathStoreDemon-v3:sync:anim"
+[T][RegisterNetEvent] "MathStoreDemon-v3:sync:remove"
+[T][AddEventHandler] "MathStoreDemon-v3:sync:remove"
+[T][RegisterNetEvent] "MathStoreDemon-v3:sync:bulk"
+[T][AddEventHandler] "MathStoreDemon-v3:sync:bulk"
+[T][CreateThread] #3 registered
+[T][RegisterNetEvent] "MathStoreDemon-v3:spawn"
+[T][AddEventHandler] "MathStoreDemon-v3:spawn"
+[T][RegisterNetEvent] "MathStoreDemon-v3:remove"
+[T][AddEventHandler] "MathStoreDemon-v3:remove"
+[T][RegisterNetEvent] "MathStoreDemon-v3:toggle"
+[T][AddEventHandler] "MathStoreDemon-v3:toggle"
+[T][RegisterNetEvent] "MathStoreDemon-v3:fly"
+[T][AddEventHandler] "MathStoreDemon-v3:fly"
+[T][RegisterNetEvent] "MathStoreDemon-v3:deleteMassive"
+[T][AddEventHandler] "MathStoreDemon-v3:deleteMassive"
+[T][RegisterNetEvent] "MathStoreDemon-v3:deleteNearby"
+[T][AddEventHandler] "MathStoreDemon-v3:deleteNearby"
+[T][RegisterNetEvent] "MathStoreDemon-v3:abrir"
+[T][AddEventHandler] "MathStoreDemon-v3:abrir"
+[T][RegisterNetEvent] "MathStoreDemon-v3:fechar"
+[T][AddEventHandler] "MathStoreDemon-v3:fechar"
+[T][RegisterNetEvent] "MathStoreDemon-v3:bater"
+[T][AddEventHandler] "MathStoreDemon-v3:bater"
+[T][RegisterNetEvent] "MathStoreDemon-v3:changeColor"
+[T][AddEventHandler] "MathStoreDemon-v3:changeColor"
+[T][AddEventHandler] "gameEventTriggered"
+[T][AddEventHandler] "onResourceStop"
+[T][AddStateBagChangeHandler] key="activeWingResource" bag=""
+[T][RegisterCommand] "/+wings_toggle"  restricted=false
+[T][RegisterCommand] "/-wings_toggle"  restricted=false
+[T][RegisterKeyMapping] cmd="/+wings_toggle" desc="Abrir/Fechar Asas" type="keyboard" key=""
+[T][CreateThread] #4 registered
+[T][RegisterCommand] "/pedestal"  restricted=false
+[T][RegisterCommand] "/pedestalremover"  restricted=false
+[T][RegisterNetEvent] "MathStoreDemon-v3:hud"
+[T][AddEventHandler] "MathStoreDemon-v3:hud"
+[T][RegisterNUICallback] "closeHud"
+[T][RegisterNUICallback] "hudAction"
+[T][RegisterCommand] "/+demon_hud"  restricted=false
+[T][RegisterCommand] "/-demon_hud"  restricted=false
+[T][RegisterKeyMapping] cmd="/+demon_hud" desc="Abrir/Fechar HUD Demon" type="keyboard" key=""
+[T][RegisterNetEvent] "MathStoreDemon-v3:cl_h1"
+[T][AddEventHandler] "MathStoreDemon-v3:cl_h1"
+[T][RegisterNetEvent] "MathStoreDemon-v3:cl_h2"
+[T][AddEventHandler] "MathStoreDemon-v3:cl_h2"
+[T][CreateThread] #5 registered
+[T][RegisterCommand] "/gethash"  restricted=false
+[T][LOADED_OK] client/main.lua
+[T][NEW_GLOBAL] removeRemoteWing = <function function: 0x5655153b2320>
+[T][NEW_GLOBAL] removeRemoteTail = <function function: 0x5655151a6c50>
+[T][THREAD_PUMP] running 4 threads, max_ticks=2
+[T][Wait] 20000ms (yielded)
+[T][Wait] 2000ms (yielded)
+[T][Wait] 2000ms (yielded)
+[T][Wait] 5000ms (yielded)
+[T][TriggerEvent] "MathStoreDemon-v3:4578desautorizar"  args={}
+[T][SetPedConfigFlag] ped=1001 flag=311 val=false
+[T][TriggerServerEvent] "MathStoreDemon-v3:sync:removed"  src=1  args={}
+[T][RemoveAnimDict] "mts_dm3_loopfly"
+[T][RemoveAnimDict] "mts_dm3_cl_1"
+[T][RemoveAnimDict] "mts_dm3_bt_1"
+[T][RemoveAnimDict] "mts_dm3_op_1"
+[T][GetHashKey] "mts_dm3_1" → 2657623977
+[T][SetModelAsNoLongerNeeded] model=2657623977
+[T][GetHashKey] "mts_dm3_2" → 2657623978
+[T][SetModelAsNoLongerNeeded] model=2657623978
+[T][GetHashKey] "mts_dm3_3" → 2657623979
+[T][SetModelAsNoLongerNeeded] model=2657623979
+[T][GetHashKey] "mts_dm3_4" → 2657623980
+[T][SetModelAsNoLongerNeeded] model=2657623980
+[T][GetHashKey] "mts_dm3_5" → 2657623981
+[T][SetModelAsNoLongerNeeded] model=2657623981
+[T][GetHashKey] "mts_dm3_6" → 2657623982
+[T][SetModelAsNoLongerNeeded] model=2657623982
+[T][GetHashKey] "mts_dm3_7" → 2657623983
+[T][SetModelAsNoLongerNeeded] model=2657623983
+[T][GetHashKey] "mts_dm3_8" → 2657623984
+[T][SetModelAsNoLongerNeeded] model=2657623984
+[T][GetHashKey] "mts_dm3_9" → 2657623985
+[T][SetModelAsNoLongerNeeded] model=2657623985
+[T][GetHashKey] "mts_dm3_10" → 781964711
+[T][SetModelAsNoLongerNeeded] model=781964711
+[T][GetHashKey] "mts_dm3_11" → 781964712
+[T][SetModelAsNoLongerNeeded] model=781964712
+[T][GetHashKey] "mts_dm3_12" → 781964713
+[T][SetModelAsNoLongerNeeded] model=781964713
+[T][GetHashKey] "mts_dm3_13" → 781964714
+[T][SetModelAsNoLongerNeeded] model=781964714
+[T][GetHashKey] "mts_dm3_14" → 781964715
+[T][SetModelAsNoLongerNeeded] model=781964715
+[T][GetHashKey] "mts_dm3_15" → 781964716
+[T][SetModelAsNoLongerNeeded] model=781964716
+[T][GetHashKey] "mts_dm3_16" → 781964717
+[T][SetModelAsNoLongerNeeded] model=781964717
+[T][GetHashKey] "mts_dm3_17" → 781964718
+[T][SetModelAsNoLongerNeeded] model=781964718
+[T][GetHashKey] "mts_dm3_18" → 781964719
+[T][SetModelAsNoLongerNeeded] model=781964719
+[T][GetHashKey] "mts_dm3_19" → 781964720
+[T][SetModelAsNoLongerNeeded] model=781964720
+[T][GetHashKey] "mts_dm3_20" → 781964742
+[T][SetModelAsNoLongerNeeded] model=781964742
+[T][GetHashKey] "mts_dm3_21" → 781964743
+[T][SetModelAsNoLongerNeeded] model=781964743
+[T][GetHashKey] "mts_dm3_22" → 781964744
+[T][SetModelAsNoLongerNeeded] model=781964744
+[T][GetHashKey] "mts_dm3_23" → 781964745
+[T][SetModelAsNoLongerNeeded] model=781964745
+[T][GetHashKey] "mts_dm3_24" → 781964746
+[T][SetModelAsNoLongerNeeded] model=781964746
+[T][GetHashKey] "mts_dm3_25" → 781964747
+[T][SetModelAsNoLongerNeeded] model=781964747
+[T][GetHashKey] "mts_dm3_26" → 781964748
+[T][SetModelAsNoLongerNeeded] model=781964748
+[T][GetHashKey] "mts_dm3_27" → 781964749
+[T][SetModelAsNoLongerNeeded] model=781964749
+[T][GetHashKey] "mts_dm3_28" → 781964750
+[T][SetModelAsNoLongerNeeded] model=781964750
+[T][GetHashKey] "mts_dm3_29" → 781964751
+[T][SetModelAsNoLongerNeeded] model=781964751
+[T][GetHashKey] "mts_dm3_30" → 781964773
+[T][SetModelAsNoLongerNeeded] model=781964773
+[T][GetHashKey] "mts_dm3_31" → 781964774
+[T][SetModelAsNoLongerNeeded] model=781964774
+[T][GetHashKey] "mts_dm3_32" → 781964775
+[T][SetModelAsNoLongerNeeded] model=781964775
+[T][GetHashKey] "mts_dm3_33" → 781964776
+[T][SetModelAsNoLongerNeeded] model=781964776
+[T][GetHashKey] "mts_dm3_34" → 781964777
+[T][SetModelAsNoLongerNeeded] model=781964777
+[T][GetHashKey] "mts_dm3_35" → 781964778
+[T][SetModelAsNoLongerNeeded] model=781964778
+[T][GetHashKey] "mts_dm3_36" → 781964779
+[T][SetModelAsNoLongerNeeded] model=781964779
+[T][GetHashKey] "mts_dm3_37" → 781964780
+[T][SetModelAsNoLongerNeeded] model=781964780
+[T][GetHashKey] "mts_dm3_38" → 781964781
+[T][SetModelAsNoLongerNeeded] model=781964781
+[T][GetHashKey] "mts_dm3_39" → 781964782
+[T][SetModelAsNoLongerNeeded] model=781964782
+[T][GetHashKey] "mts_dm3_40" → 781964804
+[T][SetModelAsNoLongerNeeded] model=781964804
+[T][GetHashKey] "mts_dm3_41" → 781964805
+[T][SetModelAsNoLongerNeeded] model=781964805
+[T][GetHashKey] "mts_dm3_42" → 781964806
+[T][SetModelAsNoLongerNeeded] model=781964806
+[T][GetHashKey] "mts_dm3_43" → 781964807
+[T][SetModelAsNoLongerNeeded] model=781964807
+[T][GetHashKey] "mts_dm3_44" → 781964808
+[T][SetModelAsNoLongerNeeded] model=781964808
+[T][GetHashKey] "mts_dm3_45" → 781964809
+[T][SetModelAsNoLongerNeeded] model=781964809
+[T][CreateThread] #2 ERROR: Luraph Script:58: client/main.lua:2: .
+[T][Wait] 2000ms (yielded)
+[T][TriggerServerEvent] "MathStoreDemon-v3:sync:requestBulk"  src=1  args={}
+[T][TriggerServerEvent] "MathStoreDemon-v3:tail:sync:requestBulk"  src=1  args={}
+[T][Wait] 5000ms (yielded)
+[T][TriggerEvent] "MathStoreDemon-v3:4578desautorizar"  args={}
+[T][SetPedConfigFlag] ped=1001 flag=311 val=false
+[T][TriggerServerEvent] "MathStoreDemon-v3:sync:removed"  src=1  args={}
+[T][RemoveAnimDict] "mts_dm3_loopfly"
+[T][RemoveAnimDict] "mts_dm3_cl_1"
+[T][RemoveAnimDict] "mts_dm3_bt_1"
+[T][RemoveAnimDict] "mts_dm3_op_1"
+[T][GetHashKey] "mts_dm3_1" → 2657623977
+[T][SetModelAsNoLongerNeeded] model=2657623977
+[T][GetHashKey] "mts_dm3_2" → 2657623978
+[T][SetModelAsNoLongerNeeded] model=2657623978
+[T][GetHashKey] "mts_dm3_3" → 2657623979
+[T][SetModelAsNoLongerNeeded] model=2657623979
+[T][GetHashKey] "mts_dm3_4" → 2657623980
+[T][SetModelAsNoLongerNeeded] model=2657623980
+[T][GetHashKey] "mts_dm3_5" → 2657623981
+[T][SetModelAsNoLongerNeeded] model=2657623981
+[T][GetHashKey] "mts_dm3_6" → 2657623982
+[T][SetModelAsNoLongerNeeded] model=2657623982
+[T][GetHashKey] "mts_dm3_7" → 2657623983
+[T][SetModelAsNoLongerNeeded] model=2657623983
+[T][GetHashKey] "mts_dm3_8" → 2657623984
+[T][SetModelAsNoLongerNeeded] model=2657623984
+[T][GetHashKey] "mts_dm3_9" → 2657623985
+[T][SetModelAsNoLongerNeeded] model=2657623985
+[T][GetHashKey] "mts_dm3_10" → 781964711
+[T][SetModelAsNoLongerNeeded] model=781964711
+[T][GetHashKey] "mts_dm3_11" → 781964712
+[T][SetModelAsNoLongerNeeded] model=781964712
+[T][GetHashKey] "mts_dm3_12" → 781964713
+[T][SetModelAsNoLongerNeeded] model=781964713
+[T][GetHashKey] "mts_dm3_13" → 781964714
+[T][SetModelAsNoLongerNeeded] model=781964714
+[T][GetHashKey] "mts_dm3_14" → 781964715
+[T][SetModelAsNoLongerNeeded] model=781964715
+[T][GetHashKey] "mts_dm3_15" → 781964716
+[T][SetModelAsNoLongerNeeded] model=781964716
+[T][GetHashKey] "mts_dm3_16" → 781964717
+[T][SetModelAsNoLongerNeeded] model=781964717
+[T][GetHashKey] "mts_dm3_17" → 781964718
+[T][SetModelAsNoLongerNeeded] model=781964718
+[T][GetHashKey] "mts_dm3_18" → 781964719
+[T][SetModelAsNoLongerNeeded] model=781964719
+[T][GetHashKey] "mts_dm3_19" → 781964720
+[T][SetModelAsNoLongerNeeded] model=781964720
+[T][GetHashKey] "mts_dm3_20" → 781964742
+[T][SetModelAsNoLongerNeeded] model=781964742
+[T][GetHashKey] "mts_dm3_21" → 781964743
+[T][SetModelAsNoLongerNeeded] model=781964743
+[T][GetHashKey] "mts_dm3_22" → 781964744
+[T][SetModelAsNoLongerNeeded] model=781964744
+[T][GetHashKey] "mts_dm3_23" → 781964745
+[T][SetModelAsNoLongerNeeded] model=781964745
+[T][GetHashKey] "mts_dm3_24" → 781964746
+[T][SetModelAsNoLongerNeeded] model=781964746
+[T][GetHashKey] "mts_dm3_25" → 781964747
+[T][SetModelAsNoLongerNeeded] model=781964747
+[T][GetHashKey] "mts_dm3_26" → 781964748
+[T][SetModelAsNoLongerNeeded] model=781964748
+[T][GetHashKey] "mts_dm3_27" → 781964749
+[T][SetModelAsNoLongerNeeded] model=781964749
+[T][GetHashKey] "mts_dm3_28" → 781964750
+[T][SetModelAsNoLongerNeeded] model=781964750
+[T][GetHashKey] "mts_dm3_29" → 781964751
+[T][SetModelAsNoLongerNeeded] model=781964751
+[T][GetHashKey] "mts_dm3_30" → 781964773
+[T][SetModelAsNoLongerNeeded] model=781964773
+[T][GetHashKey] "mts_dm3_31" → 781964774
+[T][SetModelAsNoLongerNeeded] model=781964774
+[T][GetHashKey] "mts_dm3_32" → 781964775
+[T][SetModelAsNoLongerNeeded] model=781964775
+[T][GetHashKey] "mts_dm3_33" → 781964776
+[T][SetModelAsNoLongerNeeded] model=781964776
+[T][GetHashKey] "mts_dm3_34" → 781964777
+[T][SetModelAsNoLongerNeeded] model=781964777
+[T][GetHashKey] "mts_dm3_35" → 781964778
+[T][SetModelAsNoLongerNeeded] model=781964778
+[T][GetHashKey] "mts_dm3_36" → 781964779
+[T][SetModelAsNoLongerNeeded] model=781964779
+[T][GetHashKey] "mts_dm3_37" → 781964780
+[T][SetModelAsNoLongerNeeded] model=781964780
+[T][GetHashKey] "mts_dm3_38" → 781964781
+[T][SetModelAsNoLongerNeeded] model=781964781
+[T][GetHashKey] "mts_dm3_39" → 781964782
+[T][SetModelAsNoLongerNeeded] model=781964782
+[T][GetHashKey] "mts_dm3_40" → 781964804
+[T][SetModelAsNoLongerNeeded] model=781964804
+[T][GetHashKey] "mts_dm3_41" → 781964805
+[T][SetModelAsNoLongerNeeded] model=781964805
+[T][GetHashKey] "mts_dm3_42" → 781964806
+[T][SetModelAsNoLongerNeeded] model=781964806
+[T][GetHashKey] "mts_dm3_43" → 781964807
+[T][SetModelAsNoLongerNeeded] model=781964807
+[T][GetHashKey] "mts_dm3_44" → 781964808
+[T][SetModelAsNoLongerNeeded] model=781964808
+[T][GetHashKey] "mts_dm3_45" → 781964809
+[T][SetModelAsNoLongerNeeded] model=781964809
+[T][CreateThread] #5 ERROR: Luraph Script:1768: Luraph Script:1756: client/main.lua:2: .
+[T][THREAD_PUMP] done, 2 threads still alive (stopped early)
+[T][print] ok
+[T][LOADING] client/verificar.lua
+[T][RUNTIME_ERROR] client/verificar.lua — Luraph Script:14: client/verificar.lua:2: attempt to index a nil value (field '?')
+[T][print] verificar: ok
+[T][THREAD_PUMP] running 2 threads, max_ticks=2
+[T][Wait] 2000ms (yielded)
+[T][CreateThread] #4 ERROR: Luraph Script:1204: client/main.lua:2: attempt to index a nil value (field '?')
+[T][Wait] 2000ms (yielded)
+[T][THREAD_PUMP] done, 1 threads still alive (stopped early)
+[T][print] DONE
