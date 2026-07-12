@@ -76,10 +76,10 @@ Config.Callbacks = {}
 -- @param cor number - Wing color being equipped (nil when checking HUD state)
 -- @return boolean|nil - false blocks, true/nil allows
 Config.Callbacks.CanEquipWings = function(source, cor)
-    if Player(source).state.bucket == 666 then
+    -- if Player(source).state.bucket == 666 then
         return true
-    end
-    return false
+    -- end
+    -- return false
 end
 
 -- Called AFTER wings are equipped successfully

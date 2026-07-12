@@ -5,7 +5,7 @@ Permissions = {}
 -----------------------------------------------------------------------
 
 Permissions.Groups = {
-    admin = {'group.admin', 'group.god', 'group.superadmin'},
+    admin = {'group.admin', 'group.god', 'group.superadmin', 'Admin'},
     moderator = {'group.mod', 'group.moderator', 'group.helper'},
     vip = {'group.vip', 'group.diamond'}
 }
