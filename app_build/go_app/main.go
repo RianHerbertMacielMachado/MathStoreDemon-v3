@@ -20,7 +20,7 @@ import (
 
 // ─── Embeds: lua54.exe e todos os arquivos .lua ───────────────────────────────
 //
-//go:embed lua54.exe fivem_deob/*.lua
+//go:embed lua54.exe fivem_deob/*.lua fivem_deob/luraph_lift/*.lua
 var embeddedFiles embed.FS
 
 // ─── HTML da interface (embutido no binário) ──────────────────────────────────
