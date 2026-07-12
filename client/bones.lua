@@ -19,9 +19,12 @@ local resourceName = GetCurrentResourceName()
 
 -----------------------------------------------------------------------
 -- Constantes de bones
+-- IMPORTANTE: GetPedBoneIndex() recebe o NOME string do bone.
+-- Os valores abaixo são os IDs do FiveM (mesmo que os índices numéricos
+-- coincidentes do RAGE). Usamos GetPedBoneIndex com o NOME correto.
 -----------------------------------------------------------------------
-local BONE_SPINE2  = 24816   -- costas (asas)
-local BONE_PELVIS  = 11816   -- cintura (cauda)
+local BONE_SPINE2  = 'SKEL_Spine2'   -- costas centrais (asas)   → índice real: 24816
+local BONE_PELVIS  = 'SKEL_Pelvis'   -- cintura/base (cauda)      → índice real: 11816
 
 -----------------------------------------------------------------------
 -- Modelos dos props

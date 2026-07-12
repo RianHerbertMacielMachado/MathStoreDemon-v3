@@ -27,11 +27,13 @@ ConfigInternal.TailModels = {
 
 -----------------------------------------------------------------------
 -- Bones do ped para attach dos props
+-- ATENÇÃO: bones.lua usa GetPedBoneIndex(ped, NOME_STRING)
+-- Os valores numéricos aqui são apenas referência documental.
 -- Referência: https://wiki.rage.mp/index.php?title=Bones
 -----------------------------------------------------------------------
 ConfigInternal.Bones = {
-    wing = 24816,   -- SKEL_Spine2  (costas centrais)
-    tail = 11816,   -- SKEL_Pelvis  (cintura/base da coluna)
+    wing = 'SKEL_Spine2',   -- costas centrais  (índice 24816)
+    tail = 'SKEL_Pelvis',   -- cintura/base      (índice 11816)
 }
 
 -----------------------------------------------------------------------
